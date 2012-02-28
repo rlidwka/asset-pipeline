@@ -1,2 +1,2 @@
-exports = module.exports = require('./src/pipeline');
+exports = module.exports = require('./src/index');
 
