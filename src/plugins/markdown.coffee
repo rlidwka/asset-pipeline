@@ -1,9 +1,9 @@
 module.exports =
-	source: 'haml'
+	source: 'md'
 	target: 'html'
 	compile: (code, options, callback) ->
-		Haml = require 'haml'
+		md = require('node-markdown').Markdown
 		try
-			callback(null, Haml(code)())
+			callback(null, md(code))
 		catch err
 			callback(err)

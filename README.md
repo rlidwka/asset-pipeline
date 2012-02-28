@@ -20,14 +20,10 @@ var assets_dir = './assets';
 var cache_dir = './cache';
 
 // middleware definitions
-app.configure(function() {
-	app.use(require('assets-pipeline')({assets: assets_dir, cache: cache_dir}))
-	app.use(express.static(cache_dir, { maxAge: 365*24*60*60 }))
-})
+app.use(require('assets-pipeline')({assets: assets_dir, cache: cache_dir}))
 ```
 
-My library DOES NOT serve files to a client. It just compiles it and writes to cache. Express are serving these files itself.
-
+This library writes output files to a cache and calls connect.static to serve them.
 Reasons:
 - in development enviroment: it's more verbose and logical. Pipeline is for compiling, Express.static for serving. You can always see what is in the cache and so on.
 - in production enviroment: assets-pipeline just exports a few template functions. So, in production there will be no performance impact at all.

@@ -93,22 +93,22 @@ find_file = (path, file, maincb) ->
 			maincb(err, found)
 	)
 
-actual_pipeline = (data, pipes, cb) ->
+actual_pipeline = (data, pipes, options, cb) ->
 	return cb(null, data) if pipes.length == 0
 	pipe = pipes.shift()
 	if pipe == ''
 		return actual_pipeline(data, pipes, cb)
-	unless plugins[pipe].compiler
+	unless plugins[pipe].compile
 		return cb(new Error('compiler not found'))
-	plugins[pipe].compiler(data, (err, result) ->
+	plugins[pipe].compile(data, options, (err, result) ->
 		return cb(err) if err
-		actual_pipeline(result, pipes, cb)
+		actual_pipeline(result, pipes, options, cb)
 	)
 
 send_to_pipeline = (file, dest, plugins, cb) ->
 	fs.readFile(file, 'utf8', (err, data) ->
 		return cb(err) if (err)
-		actual_pipeline(data, plugins, (err, data) ->
+		actual_pipeline(data, plugins, {filename:file}, (err, data) ->
 			return cb(err) if (err)
 			fs.writeFile(dest, data, cb)
 		)
@@ -136,7 +136,7 @@ compile_file = (options, file, cb) ->
 	)
 
 check_deps = (file, cb) ->
-	return cb(null, false)
+	return cb(null, true)
 
 serve_file = (options, req, res, file, server, next, safe=1) ->
 	safeNext = next
@@ -197,7 +197,8 @@ load_plugins = ->
 		name = Path.basename(filename, Path.extname(filename))
 		try
 			plugin = require('./plugins/' + filename)
-			if plugin.compiler
+			if plugin.compile
+				console.log filename
 				plugin.source = [plugin.source] if typeof(plugin.source) == 'string'
 				plugin.target = [plugin.target] if typeof(plugin.target) == 'string'
 				if plugin.source

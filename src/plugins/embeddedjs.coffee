@@ -1,9 +1,8 @@
 module.exports =
-	source: 'haml'
-	target: 'html'
+	source: 'ejs'
 	compile: (code, options, callback) ->
-		Haml = require 'haml'
+		ejs = require 'ejs'
 		try
-			callback(null, Haml(code)())
+			callback(null, ejs.render(code))
 		catch err
 			callback(err)
