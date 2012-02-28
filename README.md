@@ -25,6 +25,7 @@ app.use(require('assets-pipeline')({assets: assets_dir, cache: cache_dir}))
 
 This library writes output files to a cache and calls connect.static to serve them.
 Reasons:
+
 - in development enviroment: it's more verbose and logical. Pipeline is for compiling, Express.static for serving. You can always see what is in the cache and so on.
 - in production enviroment: assets-pipeline just exports a few template functions. So, in production there will be no performance impact at all.
 
