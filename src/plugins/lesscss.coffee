@@ -2,9 +2,9 @@ module.exports =
 	source: 'less'
 	target: 'css'
 	compile: (code, options, callback) ->
-		less = require 'less'
-		util = require 'util'
 		try
+			less = require 'less'
+			util = require 'util'
 			parser = new(less.Parser)(
 				paths: [options.assets_path]
 				filename: options.filename
