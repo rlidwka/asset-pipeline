@@ -3,10 +3,14 @@ module.exports =
 	target: 'css'
 	compile: (code, options, callback) ->
 		less = require 'less'
+		util = require 'util'
 		try
-			parser = new(less.Parser)(filename: options.filename)
+			parser = new(less.Parser)(
+				paths: [options.assets_path]
+				filename: options.filename
+			)
 			parser.parse(code, (err, tree) ->
-				callback(err) if (err)
+				return callback(new Error(util.inspect(err))) if (err)
 				callback(null, tree.toCSS())
 			)
 		catch err

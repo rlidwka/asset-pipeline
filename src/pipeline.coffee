@@ -3,6 +3,7 @@ async   = require 'async'
 connect = require 'connect'
 Path    = require 'path'
 URL     = require 'url'
+DepMgr  = require './depmgr'
 
 # we are serving these files to the client
 # files = {filename: [dependencies array here]}
@@ -97,7 +98,7 @@ actual_pipeline = (data, pipes, options, cb) ->
 	return cb(null, data) if pipes.length == 0
 	pipe = pipes.shift()
 	if pipe == ''
-		return actual_pipeline(data, pipes, cb)
+		return actual_pipeline(data, pipes, options, cb)
 	unless plugins[pipe].compile
 		return cb(new Error('compiler not found'))
 	plugins[pipe].compile(data, options, (err, result) ->
@@ -105,10 +106,10 @@ actual_pipeline = (data, pipes, options, cb) ->
 		actual_pipeline(result, pipes, options, cb)
 	)
 
-send_to_pipeline = (file, dest, plugins, cb) ->
+send_to_pipeline = (options, file, dest, plugins, cb) ->
 	fs.readFile(file, 'utf8', (err, data) ->
 		return cb(err) if (err)
-		actual_pipeline(data, plugins, {filename:file}, (err, data) ->
+		actual_pipeline(data, plugins, {filename:file, assets_path:options.assets}, (err, data) ->
 			return cb(err) if (err)
 			fs.writeFile(dest, data, cb)
 		)
@@ -129,7 +130,7 @@ compile_file = (options, file, cb) ->
 
 	find_file(options.assets, file, (err, found) ->
 		return run_callbacks(err) if err
-		send_to_pipeline(Path.join(options.assets, found.path), Path.join(options.cache, file), found.extlist, (err) ->
+		send_to_pipeline(options, Path.join(options.assets, found.path), Path.join(options.cache, file), found.extlist, (err) ->
 			files[file].compiled = true unless(err)
 			run_callbacks(err)
 		)
@@ -183,6 +184,7 @@ module.exports = asset_pipeline_factory = (config = {}) ->
 	config.assets = Path.normalize(config.assets)
 	config.cache ?= './cache'
 	config.cache = Path.normalize(config.cache)
+	depmgr = new DepMgr(config.assets)
 	servers =
 		normal: require('connect').static(config.cache)
 		caching: require('connect').static(config.cache, { maxAge: 365*24*60*60 })
