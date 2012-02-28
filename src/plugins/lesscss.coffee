@@ -1,10 +1,14 @@
 cssimport = require '../cssimport'
+Path      = require 'path'
 
 css_compiler = (code, options, callback) ->
 	less = require 'less'
 	util = require 'util'
 	parser = new(less.Parser)(
-		paths: [options.assets_path]
+		paths: [
+			Path.dirname(options.filename)
+			options.pipeline.builddir
+		]
 		filename: options.filename
 	)
 	parser.parse(code, (err, tree) ->
@@ -16,7 +20,7 @@ module.exports =
 	source: 'less'
 	target: 'css'
 	compile: (code, options, callback) ->
-		cssimport.search_deps(options, (err) ->
+		cssimport.search_deps(code, options, 'less', (err) ->
 			return callback(err) if err
 			try
 				css_compiler(code, options, callback)

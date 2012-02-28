@@ -10,5 +10,8 @@ class DepsManager
 		@uselist[dependon] ?= {}
 		@uselist[dependon][file] = true
 
+	check: (file, cb) ->
+		return cb(null, true)
+
 module.exports = DepsManager
 

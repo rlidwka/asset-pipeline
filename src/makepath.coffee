@@ -11,7 +11,6 @@ module.exports.calc = calc = (from, to, oldpath = [], seen = {}) ->
 	return null if seen[from] # loop
 	seen[from] = 1
 
-	#console.log "probing #{to} == #{from}"
 	if from == to then return oldpath
 
 	ext = Path.extname(from)
@@ -40,7 +39,7 @@ module.exports.find = (path, file, maincb) ->
 		for foundfile in files when foundfile.indexOf(beginning) == 0
 			makepath = calc(foundfile, base)
 			if makepath? and found.extlist.length <= makepath.length
-				found.path = foundfile
+				found.path = Path.join(Path.dirname(search_for),foundfile)
 				found.extlist = makepath
 		if found.path == ''
 			maincb(new Error('File not found'))

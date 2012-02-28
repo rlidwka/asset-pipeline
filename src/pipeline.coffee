@@ -17,18 +17,19 @@ class Pipeline
 		@options.assets = Path.normalize(@options.assets)
 		@options.cache ?= './cache'
 		@options.cache = Path.normalize(@options.cache)
+		@builddir = @options.cache # just an alias
 		@depmgr = new DepMgr(@options.assets)
 		@servers =
 			normal: Connect.static(@options.cache)
 			caching: Connect.static(@options.cache, { maxAge: 365*24*60*60 })
 		for file in (@options.files ? [])
-			@files[Path.join('/',file)] = { nocache: true }
+			@files[Path.join('/',file)] = { nocache: true, serve: true }
 
 	middleware: -> (req, res, next) =>
 		url = URL.parse(req.url)
 		path = decodeURIComponent(url.pathname)
 		file = Path.join('/', path)
-		if @files[file]?
+		if @files[file]?.serve
 			server = if @files[file].nocache then @servers.normal else @servers.caching
 			@serve_file(req, res, file, server, next)
 		else
@@ -53,7 +54,7 @@ class Pipeline
 			server(req, res, safeNext)
 		else
 			# file can be changed, checking deps
-			@check_deps(file, (err, changed) =>
+			@depmgr.check(file, (err, changed) =>
 				return next(err) if (err)
 				if changed
 					@files[file].compiled = false
@@ -62,10 +63,8 @@ class Pipeline
 					server(req, res, safeNext)
 			)
 
-	check_deps: (file, cb) ->
-		return cb(null, true)
-
 	compile_file: (file, cb) ->
+		@files[file] ?= file
 		if @compile_queue[file]?
 			@compile_queue[file].push(cb)
 			return
@@ -78,7 +77,7 @@ class Pipeline
 
 		MakePath.find(@options.assets, file, (err, found) =>
 			return run_callbacks(err) if err
-			@send_to_pipeline(Path.join(@options.assets, found.path), Path.join(@options.cache, file), found.extlist, (err) =>
+			@send_to_pipeline(found.path, Path.join(@options.cache, file), found.extlist, (err) =>
 				@files[file].compiled = true unless(err)
 				run_callbacks(err)
 			)
@@ -99,11 +98,33 @@ class Pipeline
 	send_to_pipeline: (file, dest, plugins, cb) ->
 		fs.readFile(file, 'utf8', (err, data) =>
 			return cb(err) if (err)
-			@actual_pipeline(data, plugins, {filename:file, assets_path:@options.assets}, (err, data) =>
+			@actual_pipeline(data, plugins, {filename:file, pipeline:@}, (err, data) =>
 				return cb(err) if (err)
-				fs.writeFile(dest, data, cb)
+				write_file(dest, data, cb)
 			)
 		)
+
+make_directories = (dest, cb) ->
+	dir = Path.dirname(dest)
+	return cb() if dir == '.' or dir == '..'
+	fs.mkdir(dir, (err) ->
+		if err?.code == 'ENOENT'
+			make_directories(dir, ->
+				fs.mkdir(dir, cb)
+			)
+		else
+			cb()
+	)
+
+write_file = (dest, data, cb) ->
+	fs.writeFile(dest, data, (err) ->
+		if err?.code == 'ENOENT'
+			make_directories(dest, ->
+				fs.writeFile(dest, data, cb)
+			)
+		else
+			cb(err)
+	)
 
 module.exports = Pipeline
 
