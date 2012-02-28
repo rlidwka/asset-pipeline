@@ -2,7 +2,7 @@ Coffeescript and stylesheets preprocessor/compiler for Node.js/Express.
 
 This module (as many good things in Node) is inspired by Ruby on Rails. Rails 3.1 have beautiful framework called Asset Pipeline. Main idea of this framework is applying different filters to input files based on file extension. 
 
-For example, user requested	`file.js`, but you don't write js. You write coffeescript with some preprocessor. So, this framework looks for `file.js.coffee.pp`, pipes it to preprocessor and gets `file.js.coffee`. Than compiles it to `file.js` and so on.
+For example, user requested	`file.js`. But you don't write js, you write coffeescript with some preprocessor. So, this framework looks for `file.js.coffee.pp`, pipes it to preprocessor and gets `file.js.coffee`. Than compiles it to `file.js` and so on.
 
 
 Syntax (for Express framework):
