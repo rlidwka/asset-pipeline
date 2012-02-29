@@ -5,7 +5,7 @@ This module (as many good things in Node) is inspired by Ruby on Rails. Rails 3.
 For example, user requested	`file.js`. But you don't write js, you write coffeescript with some preprocessor. So, this framework looks for `file.js.coffee.pp`, pipes it to preprocessor and gets `file.js.coffee`. Than compiles it to `file.js` and so on.
 
 
-Syntax (for Express framework):
+# Syntax (for Express framework):
 
 ```javascript
 // here's standard Express server declaration
@@ -13,15 +13,22 @@ var express = require('express')
 app = express.createServer();
 app.listen(80);
 
-// directory with your stylesheets or client-side scripts
-var assets_dir = './assets';
-
-// directory for cache
-var cache_dir = './cache';
-
-// middleware definitions
-app.use(require('assets-pipeline')({assets: assets_dir, cache: cache_dir}))
+// configuring assets pipeline (full definition of config options see below)
+app.use(require('asset-pipeline')({
+	// directory with your stylesheets or client-side scripts
+	assets: './assets',
+	// directory for cache
+	cache: cache_dir,
+}))
 ```
+
+# Config options
+
+- `assets` (default: `"./assets"`) - directory where this module does search all files and dependencies
+- `cache` (default: `"./cache"`) - directory where all compiled assets are served
+- `extensions` (default: `[".js", ".css"]`) - if user have requested file without md5 in it, module will serve to user only files with these extensions (TODO: i should probably describe what it is)
+
+# Philosophy
 
 This library writes output files to a cache and calls connect.static to serve them.
 Reasons:

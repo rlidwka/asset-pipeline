@@ -42,7 +42,9 @@ module.exports.find = (path, file, maincb) ->
 				found.path = Path.join(Path.dirname(search_for),foundfile)
 				found.extlist = makepath
 		if found.path == ''
-			maincb(new Error('File not found'))
+			error = new Error('File not found')
+			error.code = 'asset-pipeline/filenotfound'
+			maincb(error)
 		else
 			maincb(err, found)
 		)

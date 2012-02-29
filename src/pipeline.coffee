@@ -17,6 +17,9 @@ class Pipeline
 		@options.assets = Path.normalize(@options.assets)
 		@options.cache ?= './cache'
 		@options.cache = Path.normalize(@options.cache)
+		@options.extensions ?= ['.js', '.css']
+		@options.extensions =
+			@options.extensions.map (x) -> if x[0]=='.' then x else '.'+x
 		@builddir = @options.cache # just an alias
 		@depmgr = new DepMgr(@options.assets)
 		@servers =
@@ -25,12 +28,19 @@ class Pipeline
 		for file in (@options.files ? [])
 			@files[Path.join('/',file)] = { nocache: true, serve: true }
 
+	can_serve_file: (file) ->
+		if @files[file]?.serve
+			return true
+		for ext in @options.extensions when Path.extname(file) == ext
+			return true
+		return false
+
 	middleware: -> (req, res, next) =>
 		url = URL.parse(req.url)
 		path = decodeURIComponent(url.pathname)
 		file = Path.join('/', path)
-		if @files[file]?.serve
-			server = if @files[file].nocache then @servers.normal else @servers.caching
+		if @can_serve_file(file)
+			server = if @files[file]?.nocache then @servers.normal else @servers.caching
 			@serve_file(req, res, file, server, next)
 		else
 			next()
@@ -43,10 +53,14 @@ class Pipeline
 			@files[file].compiled = false
 			@serve_file(req, res, file, server, next, 0)
 
-		if not @files[file].compiled
+		if not @files[file]?.compiled
 			# file is not compiled yet
 			@compile_file(file, (err) =>
-				return next(err) if (err)
+				if (err)
+					if err.code == 'asset-pipeline/filenotfound'
+						return next() # just pass to next
+					else
+						return next(err)
 				server(req, res, safeNext)
 			)
 		else if not @files[file].nocache
@@ -64,7 +78,6 @@ class Pipeline
 			)
 
 	compile_file: (file, cb) ->
-		@files[file] ?= file
 		if @compile_queue[file]?
 			@compile_queue[file].push(cb)
 			return
@@ -78,6 +91,7 @@ class Pipeline
 		MakePath.find(@options.assets, file, (err, found) =>
 			return run_callbacks(err) if err
 			@send_to_pipeline(found.path, Path.join(@options.cache, file), found.extlist, (err) =>
+				@files[file] ?= {}
 				@files[file].compiled = true unless(err)
 				run_callbacks(err)
 			)
