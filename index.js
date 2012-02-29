@@ -1,3 +1,4 @@
+
 try {
 	module.exports = require('./src/index');
 } catch(err) {
