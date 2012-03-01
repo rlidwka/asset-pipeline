@@ -5,13 +5,13 @@ module.exports =
 	source: 'styl'
 	target: 'css'
 	compile: (code, options, callback) ->
-		cssimport.search_deps(code, options, 'styl', (err) ->
+		cssimport.search_deps(code, options, 'styl', (err, newfilename) ->
 			return callback(err) if err
+			options.filename = newfilename if newfilename
 			try
 				stylus = require 'stylus'
 				stylus(code).set('paths', [
 					Path.dirname(options.filename)
-					options.pipeline.builddir
 				]).set(
 					filename: options.filename
 				).render(callback)

@@ -26,7 +26,7 @@ class Pipeline
 			normal: Connect.static(@options.cache)
 			caching: Connect.static(@options.cache, { maxAge: 365*24*60*60 })
 		for file in (@options.files ? [])
-			@files[Path.join('/',file)] = { nocache: true, serve: true }
+			@files[Path.join('/',file)] = { serve: true }
 
 	can_serve_file: (file) ->
 		if @files[file]?.serve
@@ -40,7 +40,7 @@ class Pipeline
 		path = decodeURIComponent(url.pathname)
 		file = Path.join('/', path)
 		if @can_serve_file(file)
-			server = if @files[file]?.nocache then @servers.normal else @servers.caching
+			server = if @files[file]?.cache then @servers.caching else @servers.normal
 			@serve_file(req, res, file, server, next)
 		else
 			next()
@@ -56,14 +56,14 @@ class Pipeline
 		if not @files[file]?.compiled
 			# file is not compiled yet
 			@compile_file(file, (err) =>
-				if (err)
-					if err.code == 'asset-pipeline/filenotfound'
+				if err
+					if err?.code == 'asset-pipeline/filenotfound'
 						return next() # just pass to next
 					else
 						return next(err)
 				server(req, res, safeNext)
 			)
-		else if not @files[file].nocache
+		else if @files[file].cache
 			# file is static with md5, never changes
 			server(req, res, safeNext)
 		else
@@ -78,6 +78,7 @@ class Pipeline
 			)
 
 	compile_file: (file, cb) ->
+		console.log "!!", file
 		if @compile_queue[file]?
 			@compile_queue[file].push(cb)
 			return
@@ -114,31 +115,9 @@ class Pipeline
 			return cb(err) if (err)
 			@actual_pipeline(data, plugins, {filename:file, pipeline:@}, (err, data) =>
 				return cb(err) if (err)
-				write_file(dest, data, cb)
+				require('./util').write_file(dest, data, cb)
 			)
 		)
-
-make_directories = (dest, cb) ->
-	dir = Path.dirname(dest)
-	return cb() if dir == '.' or dir == '..'
-	fs.mkdir(dir, (err) ->
-		if err?.code == 'ENOENT'
-			make_directories(dir, ->
-				fs.mkdir(dir, cb)
-			)
-		else
-			cb()
-	)
-
-write_file = (dest, data, cb) ->
-	fs.writeFile(dest, data, (err) ->
-		if err?.code == 'ENOENT'
-			make_directories(dest, ->
-				fs.writeFile(dest, data, cb)
-			)
-		else
-			cb(err)
-	)
 
 module.exports = Pipeline
 

@@ -1,13 +1,12 @@
 cssimport = require '../cssimport'
 Path      = require 'path'
+util      = require 'util'
 
 css_compiler = (code, options, callback) ->
 	less = require 'less'
-	util = require 'util'
 	parser = new(less.Parser)(
 		paths: [
 			Path.dirname(options.filename)
-			options.pipeline.builddir
 		]
 		filename: options.filename
 	)
@@ -20,10 +19,11 @@ module.exports =
 	source: 'less'
 	target: 'css'
 	compile: (code, options, callback) ->
-		cssimport.search_deps(code, options, 'less', (err) ->
+		cssimport.search_deps(code, options, 'less', (err, newfilename) ->
 			return callback(err) if err
+			options.filename = newfilename if newfilename
 			try
 				css_compiler(code, options, callback)
 			catch err
-				callback(err)
+				return callback(new Error(util.inspect(err))) if (err)
 		)
