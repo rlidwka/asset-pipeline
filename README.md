@@ -28,6 +28,24 @@ app.use(require('asset-pipeline')({
 - `cache` (default: `"./cache"`) - directory where all compiled assets are served
 - `extensions` (default: `[".js", ".css"]`) - if user have requested file without md5 in it, module will serve to user only files with these extensions (TODO: i should probably describe what it is)
 
+# Writing custom plugin
+
+If you have some compiler you want to use, and it is not (yet?) supported by assets-pipeline, you can just write your own module and copy it to plugins directory.
+
+Your module should export object simular to that (you can look inside existing plugins):
+
+```javascript
+module.exports = {
+  source: 'coffee', // file extension (or array of these extensions) of files that will be processed by your plugin, mandatory
+  target: 'js', // file extension (or array of these extensions) of target files, optional
+  // your compiler, arguments: source code, some options (options.filename is quite useful) and callback
+  compile: function(code, options, callback) {
+    callback(null, require('coffee-script').compile(code));
+  }
+};
+
+If your compiler does not support including other files, your plugin will be nice and simple. If it does and you want to track all dependencies, just write an issue and ask for help (because of some really black magic starting here).
+
 # Philosophy
 
 This library writes output files to a cache and calls connect.static to serve them.
