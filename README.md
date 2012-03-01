@@ -36,13 +36,20 @@ Your module should export object simular to that (you can look inside existing p
 
 ```javascript
 module.exports = {
-  source: 'coffee', // file extension (or array of these extensions) of files that will be processed by your plugin, mandatory
-  target: 'js', // file extension (or array of these extensions) of target files, optional
-  // your compiler, arguments: source code, some options (options.filename is quite useful) and callback
+  // file extension (or array of these extensions) of files 
+  // that will be processed by your plugin, mandatory
+  source: 'coffee',
+
+  // file extension (or array of these extensions) of target files, optional
+  target: 'js',
+
+  // your compiler, arguments: source code, some options 
+  // (options.filename is quite useful) and a callback(err, compiled_code)
   compile: function(code, options, callback) {
     callback(null, require('coffee-script').compile(code));
   }
 };
+```
 
 If your compiler does not support including other files, your plugin will be nice and simple. If it does and you want to track all dependencies, just write an issue and ask for help (because of some really black magic starting here).
 
