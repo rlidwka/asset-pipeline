@@ -27,6 +27,7 @@ app.use(require('asset-pipeline')({
 - `assets` (default: `"./assets"`) - directory where this module does search all files and dependencies
 - `cache` (default: `"./cache"`) - directory where all compiled assets are served
 - `extensions` (default: `[".js", ".css"]`) - if user have requested file without md5 in it, module will serve to user only files with these extensions (TODO: i should probably describe what it is)
+- `debug` - print to stdout some additional debug info
 
 # Writing custom plugin
 

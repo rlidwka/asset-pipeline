@@ -5,6 +5,7 @@ fs       = require 'fs'
 async    = require 'async'
 DepMgr   = require './depmgr'
 MakePath = require './makepath'
+util     = require './util'
 
 class Pipeline
 	constructor: (@options, @plugins) ->
@@ -17,6 +18,8 @@ class Pipeline
 		@options.assets = Path.normalize(@options.assets)
 		@options.cache ?= './cache'
 		@options.cache = Path.normalize(@options.cache)
+		if @options.debug?
+			util.do_log(@options.debug)
 		@options.extensions ?= ['.js', '.css']
 		@options.extensions =
 			@options.extensions.map (x) -> if x[0]=='.' then x else '.'+x
@@ -40,6 +43,7 @@ class Pipeline
 		path = decodeURIComponent(url.pathname)
 		file = Path.join('/', path)
 		if @can_serve_file(file)
+			util.log('trying to serve', file)
 			server = if @files[file]?.cache then @servers.caching else @servers.normal
 			@serve_file(req, res, file, server, next)
 		else
@@ -78,7 +82,7 @@ class Pipeline
 			)
 
 	compile_file: (file, cb) ->
-		console.log "!!", file
+		util.log "compiling #{file}"
 		if @compile_queue[file]?
 			@compile_queue[file].push(cb)
 			return
@@ -90,7 +94,10 @@ class Pipeline
 			async.parallel(old_queue.map((f)->f.bind.apply(f, args)))
 
 		MakePath.find(@options.assets, file, (err, found) =>
-			return run_callbacks(err) if err
+			if err
+				@depmgr.resolves_to(file, null)
+				return run_callbacks(err)
+			@depmgr.resolves_to(file, found.path)
 			@send_to_pipeline(found.path, Path.join(@options.cache, file), found.extlist, (err) =>
 				@files[file] ?= {}
 				@files[file].compiled = true unless(err)
@@ -115,7 +122,7 @@ class Pipeline
 			return cb(err) if (err)
 			@actual_pipeline(data, plugins, {filename:file, pipeline:@}, (err, data) =>
 				return cb(err) if (err)
-				require('./util').write_file(dest, data, cb)
+				util.write_file(dest, data, cb)
 			)
 		)
 

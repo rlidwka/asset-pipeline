@@ -1,5 +1,6 @@
 Path = require 'path'
 fs   = require 'fs'
+util = require './util'
 
 mappings = {}
 
@@ -7,7 +8,6 @@ module.exports.setmappings = (map) ->
 	mappings = map
 
 module.exports.calc = calc = (from, to, oldpath = [], seen = {}) ->
-	console.log 'calc', from, to, mappings
 	return null if oldpath.length > 10 # infinite loop?
 	return null if seen[from] # loop
 	seen[from] = 1
@@ -29,7 +29,6 @@ module.exports.calc = calc = (from, to, oldpath = [], seen = {}) ->
 
 # this function scans assets dir for given partial filename
 module.exports.find = (path, file, maincb) ->
-	console.log('FIND', file)
 	search_for = Path.join(path, file)
 	base = Path.basename(search_for)
 	beginning = base.substr(0, base.indexOf('.')) || base
@@ -48,6 +47,5 @@ module.exports.find = (path, file, maincb) ->
 			error.code = 'asset-pipeline/filenotfound'
 			maincb(error)
 		else
-			console.log 'FOUND!!!!!!', found
 			maincb(err, found)
 		)

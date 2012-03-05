@@ -1,5 +1,6 @@
 Path = require 'path'
 fs   = require 'fs'
+_do_log = false
 
 make_directories = (dest, cb) ->
 	dir = Path.dirname(dest)
@@ -22,3 +23,9 @@ module.exports.write_file = (dest, data, cb) ->
 		else
 			cb(err)
 	)
+
+module.exports.do_log = (arg) -> _do_log = !!arg
+
+module.exports.log = (args...) ->
+	console.log(new Date(), args...) if _do_log
+
