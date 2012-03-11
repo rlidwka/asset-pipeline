@@ -1,9 +1,9 @@
 module.exports =
-	source: 'coffee'
+	source: 'iced'
 	target: 'js'
 	compile: (code, options, callback) ->
 		try
-			coffee = require 'coffee-script'
+			coffee = require 'iced-coffee-script'
 			callback(null, coffee.compile(code, {filename: options.filename}))
 		catch err
 			callback(err)
