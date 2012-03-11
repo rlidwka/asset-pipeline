@@ -43,7 +43,7 @@ class Pipeline
 		path = decodeURIComponent(url.pathname)
 		file = Path.join('/', path)
 		if @can_serve_file(file)
-			util.log('trying to serve', file)
+			util.log('trying to serve ' + file)
 			server = if @files[file]?.cache then @servers.caching else @servers.normal
 			@serve_file(req, res, file, server, next)
 		else

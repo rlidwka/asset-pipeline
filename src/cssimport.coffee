@@ -18,6 +18,7 @@ scan_code = (code, pipeline, ext, filename, cb) ->
 	ext = '.'+ext.replace(/^\./, '')
 	dir = Path.dirname(filename)
 	funcs = []
+	deplist = []
 	matches = code.match(/^@import\s.*$/mg)
 	if matches?
 		for imports in code.match(/^@import\s.*$/mg)
@@ -26,9 +27,11 @@ scan_code = (code, pipeline, ext, filename, cb) ->
 				file = file[1]
 				if ext != Path.extname(file)
 					file = file + ext
-				path = Path.relative(pipeline.options.assets, Path.join(dir, file))
+				path = Path.join('/', Path.relative(pipeline.options.assets, Path.join(dir, file)))
 				unless path.match(/^\.\.\//)
-					funcs.push(found_css_dep(pipeline, ext, Path.join('/', path)))
+					deplist.push(path)
+					funcs.push(found_css_dep(pipeline, ext, path))
+	pipeline.depmgr.depends_on(filename, deplist)
 	async.parallel(funcs, (err, res) ->
 		if err?.code == 'asset-pipeline/filenotfound'
 			cb(new Error("dep not found"))
