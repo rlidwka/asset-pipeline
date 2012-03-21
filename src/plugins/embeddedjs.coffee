@@ -4,6 +4,7 @@ module.exports =
 		try
 			ejs = require 'ejs'
 			inlines = require '../inlines'
+			console.log(inlines.list)
 			code = ejs.render(code, inlines.list)
 			inlines.call(code, (err, newcode) ->
 				callback(err, newcode)

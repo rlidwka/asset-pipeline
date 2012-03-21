@@ -105,3 +105,14 @@ asyncTest "require changeable .css", ->
 			), 1000)
 		)
 	)
+
+asyncTest "inlines helloworld", ->
+	$.get("/inlines/helloworld.js", (res) ->
+		equal(res, """
+var x = '&quot;&lt;hello &amp; world&gt;&quot;';
+var y = '\"<hello & world>\"';
+var z = '';
+
+""")
+		start()
+	)
