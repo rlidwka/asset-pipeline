@@ -3,6 +3,10 @@ module.exports =
 	compile: (code, options, callback) ->
 		try
 			ejs = require 'ejs'
-			callback(null, ejs.render(code))
+			inlines = require '../inlines'
+			code = ejs.render(code, inlines.list)
+			inlines.call(code, (err, newcode) ->
+				callback(err, newcode)
+			)
 		catch err
 			callback(err)
