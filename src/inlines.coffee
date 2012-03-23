@@ -4,7 +4,7 @@
 
 # hashes
 
-fs = require 'fs'
+fs    = require 'fs'
 async = require 'async'
 
 escape_chars = ['\\', '&', '\'', '"', '<', '>']
@@ -70,9 +70,18 @@ module.exports.prepare = (gopts) ->
 	Inlines.asset_require_path = Wrap (file, options = {}) ->
 		(cb) -> cb('not supported yet')
 
-	Inlines.asset_depend_on = Wrap (file, options = {}) ->
-		gopts.pipeline.depmgr.depends_on(gopts.filename, deplist)
-		(cb) -> cb('not supported yet')
+	Inlines.asset_depend_on = Wrap (file) ->
+		filename = gopts.pipeline.path_to_req(gopts.filename)
+		results = null
+		callback = null
+		gopts.pipeline.compile_file(file, (err) ->
+			gopts.pipeline.depmgr.depends_on(filename, file) unless err
+			results = arguments
+			callback.apply(null, results) if callback?
+		)
+		(cb) ->
+			callback = cb
+			callback.apply(null, results) if results?
 
 	Inlines.asset_digest = Wrap (file, options = {}) ->
 		(cb) -> cb('not supported yet')

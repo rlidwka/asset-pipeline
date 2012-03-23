@@ -1,4 +1,8 @@
 
+sleep = (sec = 1) ->
+	(cb) ->
+		setTimeout(cb, sec*1000)
+
 asyncTest "getting .js.coffee.jsx", ->
 	$.get("/test3ext.js", (res) ->
 		equal(res, '''
@@ -116,3 +120,37 @@ var z = '';
 """)
 		start()
 	)
+
+asyncTest "inline: depend_on", ->
+	async.series [
+		(cb) ->
+			$.post("/set", {file:'depend_on.flag', body:"1"}, (res) ->
+				cb()
+			)
+		,
+		(cb) ->
+			$.get("/inlines/dependon.js", (res) ->
+				cb(null, res)
+			)
+		,
+		sleep(),
+		(cb) ->
+			$.get("/inlines/dependon.js", (res) ->
+				cb(null, res)
+			)
+		,
+		sleep(),
+		(cb) ->
+			$.post("/set", {file:'depend_on.flag', body:"2"}, (res) ->
+				cb()
+			)
+		,
+		(cb) ->
+			$.get("/inlines/dependon.js", (res) ->
+				cb(null, res)
+			)
+		,
+	], (err, res) ->
+		equal(res[1], res[3])
+		notEqual(res[3], res[6])
+		start()

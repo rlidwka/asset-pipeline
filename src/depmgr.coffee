@@ -24,7 +24,6 @@ class DepsManager
 		@min_check_time = 500
 
 	clear_deps: (file) ->
-		console.log('CLEAR', file)
 		@deplist[file] = {}
 	
 	depends_on: (file, dep) ->
