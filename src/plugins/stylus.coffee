@@ -12,7 +12,7 @@ module.exports =
 				stylus = require 'stylus'
 				inlines = require '../inlines'
 				compiler = stylus(code)
-				for idx,fn of inlines.list
+				for idx,fn of inlines.prepare(options)
 					compiler.define(idx, fn)
 
 				compiler.set('paths', [

@@ -98,33 +98,46 @@ class Pipeline
 				@depmgr.resolves_to(file, null)
 				return run_callbacks(err)
 			@depmgr.resolves_to(file, found.path)
-			@send_to_pipeline(found.path, Path.join(@options.cache, file), found.extlist, (err) =>
+			@send_to_pipeline(file, found.path, found.extlist, (err) =>
 				@files[file] ?= {}
 				@files[file].compiled = true unless(err)
 				run_callbacks(err)
 			)
 		)
 
-	actual_pipeline: (data, pipes, attrs, cb) ->
+	actual_pipeline: (data, pipes, filename, attrs, cb) ->
 		return cb(null, data) if pipes.length == 0
 		pipe = pipes.shift()
-		if pipe == ''
-			return actual_pipeline(data, pipes, attrs, cb)
-		unless @plugins[pipe].compile
+		if pipe.ext == ''
+			return @actual_pipeline(data, pipes, pipe.file, attrs, cb)
+		unless @plugins[pipe.ext].compile
 			return cb(new Error('compiler not found'))
-		@plugins[pipe].compile(data, attrs, (err, result) =>
+		attrs.filename = pipe.file
+		oldfile = @path_to_req(filename)
+		newfile = @path_to_req(pipe.file)
+		@depmgr.clear_deps(newfile)
+		@depmgr.depends_on(newfile, oldfile)
+		attrs.filename = pipe.file
+		@plugins[pipe.ext].compile(data, attrs, (err, result) =>
 			return cb(err) if err
-			@actual_pipeline(result, pipes, attrs, cb)
+			@actual_pipeline(result, pipes, pipe.file, attrs, cb)
 		)
 
-	send_to_pipeline: (file, dest, plugins, cb) ->
+	send_to_pipeline: (reqfile, file, plugins, cb) ->
+		dest = Path.join(@options.cache, reqfile)
+		@depmgr.clear_deps(@path_to_req(file))
 		fs.readFile(file, 'utf8', (err, data) =>
 			return cb(err) if (err)
-			@actual_pipeline(data, plugins, {filename:file, pipeline:@}, (err, data) =>
+			console.log('+================', plugins)
+			@actual_pipeline(data, plugins, file, {pipeline:@}, (err, data) =>
 				return cb(err) if (err)
 				util.write_file(dest, data, cb)
 			)
 		)
+
+	path_to_req:   (path) -> Path.join('/', Path.relative(@options.assets, path))
+	path_to_cache: (path) -> Path.join(@options.cache, @path_to_req(path))
+	req_to_cache:  (path) -> Path.join(@options.cache, path)
 
 module.exports = Pipeline
 

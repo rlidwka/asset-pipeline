@@ -6,7 +6,6 @@
 
 fs = require 'fs'
 async = require 'async'
-module.exports.list = Inlines = {}
 
 escape_chars = ['\\', '&', '\'', '"', '<', '>']
 
@@ -50,50 +49,57 @@ module.exports.call = (code, maincb) ->
 
 # options.once
 # options.jsformat
-Inlines.asset_include = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+module.exports.prepare = (gopts) ->
+	Inlines = {}
+	Inlines.asset_include = Wrap (file, options = {}) ->
+		#fs.readFile.bind(@, file)
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_include_dir = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_include_dir = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_include_path = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_include_path = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_require = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_require = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_require_dir = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_require_dir = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_require_path = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_require_path = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_depend_on = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_depend_on = Wrap (file, options = {}) ->
+		gopts.pipeline.depmgr.depends_on(gopts.filename, deplist)
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_digest = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_digest = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_md5 = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_md5 = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_size = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_size = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_mtime = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_mtime = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_ctime = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_ctime = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_atime = Wrap (file, options = {}) ->
-	fs.readFile.bind(@, file)
+	Inlines.asset_atime = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
 
-Inlines.asset_uri = Wrap (file, options = {}) ->
-	'/some-file.txt'
+	Inlines.asset_uri = Wrap (file, options = {}) ->
+		(cb) -> cb('not supported yet')
+		#'/some-file.txt'
 
-Inlines.asset_echo = Wrap (msg) ->
-	(cb) -> cb(null, msg)
+	Inlines.asset_echo = Wrap (msg) ->
+		(cb) -> cb(null, msg)
+
+	return Inlines
 
 ###
 Debug = (name, fn) ->

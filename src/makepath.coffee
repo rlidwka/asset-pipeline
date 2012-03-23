@@ -16,12 +16,12 @@ module.exports.calc = calc = (from, to, oldpath = [], seen = {}) ->
 
 	ext = Path.extname(from)
 	return null if ext == '' or !mappings[ext]?
-	from = Path.basename(from, ext)
+	newfrom = Path.basename(from, ext)
 	min = Infinity
 	minpath = null
 	for newext in mappings[ext]
-		newpath = oldpath.slice(0).concat(ext)
-		res = calc(from+newext, to, newpath, seen)
+		newpath = oldpath.slice(0).concat({ext, file: newfrom+newext})
+		res = calc(newfrom+newext, to, newpath, seen)
 		if res? and res.length < min
 			min = res.length
 			minpath = res
@@ -32,16 +32,20 @@ module.exports.find = (path, file, maincb) ->
 	search_for = Path.join(path, file)
 	base = Path.basename(search_for)
 	beginning = base.substr(0, base.indexOf('.')) || base
-	fs.readdir(Path.dirname(search_for), (err, files) ->
+	dir = Path.dirname(search_for)
+	fs.readdir(dir, (err, files) ->
 		return maincb(err) if err
 		results = []
 
 		found = path:'', extlist:[]
 		for foundfile in files when foundfile.indexOf(beginning) == 0
 			makepath = calc(foundfile, base)
+			console.log(makepath)
 			if makepath? and found.extlist.length <= makepath.length
 				found.path = Path.join(Path.dirname(search_for),foundfile)
 				found.extlist = makepath
+				for x in found.extlist
+					x.file = Path.join(dir, x.file)
 		if found.path == ''
 			error = new Error('File not found')
 			error.code = 'asset-pipeline/filenotfound'

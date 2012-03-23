@@ -4,7 +4,6 @@ async = require 'async'
 
 logcheck = (fn) ->
 	(file, cb) ->
-		console.log('Oo')
 		fn.call(@, file, (err, res) ->
 			util.log(if err
 				"file #{file} cannot be checked"
@@ -23,11 +22,14 @@ class DepsManager
 		# path -> last modified
 		@files = {}
 		@min_check_time = 500
-	
-	depends_on: (file, deplist) ->
-		util.log "file #{file} depends on [#{deplist.join(',')}]"
+
+	clear_deps: (file) ->
+		console.log('CLEAR', file)
 		@deplist[file] = {}
-		@deplist[file][dep] = true for dep in deplist
+	
+	depends_on: (file, dep) ->
+		util.log "file #{file} depends on #{dep}]"
+		@deplist[file][dep] = true
 
 	resolves_to: (file, path) ->
 		unless path?
@@ -43,7 +45,35 @@ class DepsManager
 				mtime: Number(res.mtime)
 		)
 
+	_checkFile: (file, cb) ->
+		return cb(null, false) unless @resolving[file]?
+		path = @resolving[file]
+		return cb(null, false) unless @files[path]?
+		fs.stat(path, (err, res) =>
+			return cb(err) if err
+			newtime = Number(res.mtime)
+			return cb(null, newtime != @files[path].mtime)
+		)
+
+	_checkDeps: (file, cb) ->
+		funcs = []
+		if @deplist[file]?
+			for dep of @deplist[file]
+				funcs.push @check.bind(@, dep)
+		async.parallel(funcs, (err, res) =>
+			return cb(err) if err
+			# if one of array is true return true, false otherwise
+			return cb(null, !!(1 for i in res when !!i).length)
+		)
+
 	check: logcheck (file, cb) ->
+		async.parallel [
+			@_checkFile.bind(@, file),
+			@_checkDeps.bind(@, file)
+		], (err, res) =>
+			return cb(err) if err
+			return cb(null, res[0] || res[1])
+###
 		return cb(null, false) unless @resolving[file]?
 		path = @resolving[file]
 		return cb(null, false) unless @files[path]?
@@ -54,7 +84,6 @@ class DepsManager
 				return cb(null, true)
 
 			funcs = []
-			console.log(@deplist);console.log(@resolving)
 			if @deplist[path]?
 				for dep of @deplist[path]
 					funcs.push @check.bind(@, dep)
@@ -64,6 +93,7 @@ class DepsManager
 				return cb(null, !!(1 for i in res when !!i).length)
 			)
 		)
+###
 
 module.exports = DepsManager
 
