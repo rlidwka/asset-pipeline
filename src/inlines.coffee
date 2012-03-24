@@ -51,9 +51,22 @@ module.exports.call = (code, maincb) ->
 # options.jsformat
 module.exports.prepare = (gopts) ->
 	Inlines = {}
+	###
 	Inlines.asset_include = Wrap (file, options = {}) ->
-		#fs.readFile.bind(@, file)
+		filename = gopts.pipeline.path_to_req(gopts.filename)
+		results = null
+		callback = null
+		gopts.pipeline.compile_file(file, (err) ->
+			fs.readFile(file, (err) ->
+				gopts.pipeline.depmgr.depends_on(filename, file) unless err
+				results = arguments
+				callback.apply(null, results) if callback?
+		)
+		(cb) ->
+			callback = cb
+			callback.apply(null, results) if results?
 		(cb) -> cb('not supported yet')
+###
 
 	Inlines.asset_include_dir = Wrap (file, options = {}) ->
 		(cb) -> cb('not supported yet')

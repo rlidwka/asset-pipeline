@@ -56,9 +56,11 @@ class Pipeline
 			return next(err) if (err)
 			@files[file].compiled = false
 			@serve_file(req, res, file, server, next, 0)
-
-		if not @files[file]?.compiled
-			# file is not compiled yet
+		
+		if @files[file]?.compiled and @files[file].cache
+			# file is static with md5, never changes
+			server(req, res, safeNext)
+		else
 			@compile_file(file, (err) =>
 				if err
 					if err?.code == 'asset-pipeline/filenotfound'
@@ -67,43 +69,44 @@ class Pipeline
 						return next(err)
 				server(req, res, safeNext)
 			)
-		else if @files[file].cache
-			# file is static with md5, never changes
-			server(req, res, safeNext)
+
+	check_if_changed: (file, cb) ->
+		if !@files[file]?.compiled
+			cb()
 		else
-			# file can be changed, checking deps
 			@depmgr.check(file, (err, changed) =>
-				return next(err) if (err)
-				if changed
-					@files[file].compiled = false
-					@serve_file(req, res, file, server, next)
-				else
-					server(req, res, safeNext)
+				return cb(err) if err
+				@files[file].compiled = false if changed
+				cb()
 			)
 
 	compile_file: (file, cb) ->
-		util.log "compiling #{file}"
-		if @compile_queue[file]?
-			@compile_queue[file].push(cb)
-			return
-		@compile_queue[file] = [cb]
-		run_callbacks = (args...) =>
-			old_queue = @compile_queue[file]
-			delete @compile_queue[file]
-			args.unshift(null)
-			async.parallel(old_queue.map((f)->f.bind.apply(f, args)))
+		@check_if_changed file, (err) =>
+			return cb(err) if (err)
+			return cb() if @files[file]?.compiled
 
-		MakePath.find(@options.assets, file, (err, found) =>
-			if err
-				@depmgr.resolves_to(file, null)
-				return run_callbacks(err)
-			@depmgr.resolves_to(file, found.path)
-			@send_to_pipeline(file, found.path, found.extlist, (err) =>
-				@files[file] ?= {}
-				@files[file].compiled = true unless(err)
-				run_callbacks(err)
+			util.log "compiling #{file}"
+			if @compile_queue[file]?
+				@compile_queue[file].push(cb)
+				return
+			@compile_queue[file] = [cb]
+			run_callbacks = (args...) =>
+				old_queue = @compile_queue[file]
+				delete @compile_queue[file]
+				args.unshift(null)
+				async.parallel(old_queue.map((f)->f.bind.apply(f, args)))
+
+			MakePath.find(@options.assets, file, (err, found) =>
+				if err
+					@depmgr.resolves_to(file, null)
+					return run_callbacks(err)
+				@depmgr.resolves_to(file, found.path)
+				@send_to_pipeline(file, found.path, found.extlist, (err) =>
+					@files[file] ?= {}
+					@files[file].compiled = true unless(err)
+					run_callbacks(err)
+				)
 			)
-		)
 
 	actual_pipeline: (data, pipes, filename, attrs, cb) ->
 		return cb(null, data) if pipes.length == 0
@@ -128,7 +131,6 @@ class Pipeline
 		@depmgr.clear_deps(@path_to_req(file))
 		fs.readFile(file, 'utf8', (err, data) =>
 			return cb(err) if (err)
-			console.log('+================', plugins)
 			@actual_pipeline(data, plugins, file, {pipeline:@}, (err, data) =>
 				return cb(err) if (err)
 				util.write_file(dest, data, cb)

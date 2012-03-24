@@ -40,7 +40,6 @@ module.exports.find = (path, file, maincb) ->
 		found = path:'', extlist:[]
 		for foundfile in files when foundfile.indexOf(beginning) == 0
 			makepath = calc(foundfile, base)
-			console.log(makepath)
 			if makepath? and found.extlist.length <= makepath.length
 				found.path = Path.join(Path.dirname(search_for),foundfile)
 				found.extlist = makepath
