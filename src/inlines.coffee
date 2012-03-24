@@ -6,6 +6,7 @@
 
 fs    = require 'fs'
 async = require 'async'
+Path  = require 'path'
 
 escape_chars = ['\\', '&', '\'', '"', '<', '>']
 
@@ -51,22 +52,29 @@ module.exports.call = (code, maincb) ->
 # options.jsformat
 module.exports.prepare = (gopts) ->
 	Inlines = {}
-	###
+	
 	Inlines.asset_include = Wrap (file, options = {}) ->
 		filename = gopts.pipeline.path_to_req(gopts.filename)
 		results = null
 		callback = null
+		file = Path.resolve(Path.dirname(filename), file)
 		gopts.pipeline.compile_file(file, (err) ->
-			fs.readFile(file, (err) ->
+			fs.readFile(gopts.pipeline.req_to_cache(file), 'utf8', (err) ->
 				gopts.pipeline.depmgr.depends_on(filename, file) unless err
 				results = arguments
+				unless err
+					if options.jsescape
+						results[1] = results[1].
+							replace(/\\/g, '\\\\').
+							replace(/\n/g, '\\n').
+							replace(/'/g, '\\\'').
+							replace(/"/g, '\\\"')
 				callback.apply(null, results) if callback?
+			)
 		)
 		(cb) ->
 			callback = cb
 			callback.apply(null, results) if results?
-		(cb) -> cb('not supported yet')
-###
 
 	Inlines.asset_include_dir = Wrap (file, options = {}) ->
 		(cb) -> cb('not supported yet')

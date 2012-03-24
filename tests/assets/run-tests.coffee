@@ -182,3 +182,24 @@ asyncTest "should not recompile deps for every change", ->
 		equal(res[1], res[4])
 		console.log(res)
 		start()
+
+asyncTest "inlines includesimple", ->
+	$.get("/inlines/includesimple.js", (res) ->
+		equal(res, """
+var x = "&lt;div class=&quot;test1&quot;&gt;&lt;/div&gt;";
+var y = "&lt;div class=&quot;test2&quot;&gt;&lt;/div&gt;";
+var y = "&lt;div class=&quot;test3&quot;&gt;&lt;/div&gt;";
+var y = ".test3\\n";
+
+""")
+		start()
+	)
+
+asyncTest "inlines includeunsafe", ->
+	$.get("/inlines/includeunsafe.js", (res) ->
+		equal(res, """
+var y = "this is some unsafe string \\\\\\n\\\\\\\\ \\\\\\\\\\n\\" \\"\\" \\'\\'\\'\\nhi!\\n";
+
+""")
+		start()
+	)
