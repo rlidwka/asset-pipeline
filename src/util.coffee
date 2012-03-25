@@ -33,5 +33,3 @@ exports.do_log = (arg) ->
 
 exports.log = (args...) ->
 	util.log(args...) if _do_log
-
-

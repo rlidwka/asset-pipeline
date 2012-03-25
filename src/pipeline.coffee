@@ -25,6 +25,7 @@ class Pipeline
 			@options.extensions.map (x) -> if x[0]=='.' then x else '.'+x
 		@builddir = @options.cache # just an alias
 		@depmgr = new DepMgr(@options.assets)
+		@depmgr.min_check_time = @options.min_check_time ? 1000
 		@servers =
 			normal: Connect.static(@options.cache)
 			caching: Connect.static(@options.cache, { maxAge: 365*24*60*60 })
@@ -110,6 +111,7 @@ class Pipeline
 
 	actual_pipeline: (data, pipes, filename, attrs, cb) ->
 		return cb(null, data) if pipes.length == 0
+		data = data.toString('utf8')
 		pipe = pipes.shift()
 		if pipe.ext == ''
 			return @actual_pipeline(data, pipes, pipe.file, attrs, cb)
@@ -129,7 +131,7 @@ class Pipeline
 	send_to_pipeline: (reqfile, file, plugins, cb) ->
 		dest = Path.join(@options.cache, reqfile)
 		@depmgr.clear_deps(@path_to_req(file))
-		fs.readFile(file, 'utf8', (err, data) =>
+		fs.readFile(file, (err, data) =>
 			return cb(err) if (err)
 			@actual_pipeline(data, plugins, file, {pipeline:@}, (err, data) =>
 				return cb(err) if (err)

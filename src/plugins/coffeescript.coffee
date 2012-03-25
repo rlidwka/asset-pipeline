@@ -17,6 +17,6 @@ module.exports =
 				coffee = try_require 'iced-coffee-script'
 			unless coffee?
 				throw new Error('could not find any coffee')
-			callback(null, coffee.compile(code, {filename: options.filename}))
+			callback(null, coffee.compile(code.toString('utf8'), {filename: options.filename}))
 		catch err
 			callback(err)

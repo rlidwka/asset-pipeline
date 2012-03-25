@@ -21,7 +21,8 @@ class DepsManager
 		@deplist = {}
 		# path -> last modified
 		@files = {}
-		@min_check_time = 500
+		@fs_stat_queue = {}
+		@min_check_time = 1000
 
 	clear_deps: (file) ->
 		@deplist[file] = {}
@@ -47,11 +48,40 @@ class DepsManager
 	_checkFile: (file, cb) ->
 		return cb(null, false) unless @resolving[file]?
 		path = @resolving[file]
-		return cb(null, false) unless @files[path]?
+		return cb(null, true) unless @files[path]?
+		return cb(null, true) unless @files[path].mtime?
+
+		if Math.abs(Date.now() - @files[path].checked) < @min_check_time
+			return cb(null, false)
+
+		if @fs_stat_queue[path]?
+			@fs_stat_queue[path].push(cb)
+			return
+		
+		@fs_stat_queue[path] = [cb]
 		fs.stat(path, (err, res) =>
-			return cb(err) if err
+			if err and err.code != 'ENOENT'
+				_cb(err) for _cb in @fs_stat_queue[path]
+				delete @fs_stat_queue[path]
+				return
+
+			if err?.code == 'ENOENT'
+				_cb(null, true) for _cb in @fs_stat_queue[path]
+				delete @files[path].mtime
+				delete @fs_stat_queue[path]
+				return
+
 			newtime = Number(res.mtime)
-			return cb(null, newtime != @files[path].mtime)
+			changed = newtime != @files[path].mtime
+			@files[path].checked = Date.now()
+			if changed
+				delete @files[path].mtime
+				util.log("fstat: file #{path} has been changed")
+			else
+				util.log("fstat: file #{path} is the same")
+				
+			_cb(null, !!changed) for _cb in @fs_stat_queue[path]
+			delete @fs_stat_queue[path]
 		)
 
 	_checkDeps: (file, cb) ->
@@ -65,7 +95,7 @@ class DepsManager
 			return cb(null, !!(1 for i in res when !!i).length)
 		)
 
-	check: logcheck (file, cb) ->
+	check: (file, cb) ->
 		async.parallel [
 			@_checkFile.bind(@, file),
 			@_checkDeps.bind(@, file)

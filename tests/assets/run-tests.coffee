@@ -203,3 +203,27 @@ var y = "this is some unsafe string \\\\\\n\\\\\\\\ \\\\\\\\\\n\\" \\"\\" \\'\\'
 """)
 		start()
 	)
+
+asyncTest "inlines - hashes", ->
+	$.get("/inlines/hashes.js", (res) ->
+		equal(res, """
+var x = 'd9c1c3c28592a3856bc07452cc44acd3';
+var x = '2cHDwoWS';
+var x = 'a91d8cf2ab765ab1cda04a5b3d4a009b';
+var x = 'qR2M8qt2';
+
+""")
+		start()
+	)
+
+asyncTest "inlines - asset_uri", ->
+	$.get("/inlines/asset_uri.js", (res) ->
+		equal(res, """
+var x = '/bin-2cHDwoWS';
+var x = '/test-qR2M8qt2.css';
+var x = '/tes-kWHwZtAf.coffee';
+var x = '/inlines/hel-89eZzvC2.js';
+
+""")
+		start()
+	)
