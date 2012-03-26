@@ -139,6 +139,12 @@ class Pipeline
 			)
 		)
 
+	register: (orig_name, static_name, cb) ->
+		@files[static_name] =
+			cache: yes
+			serve: yes
+			compiled: yes
+
 	path_to_req:   (path) -> Path.join('/', Path.relative(@options.assets, path))
 	path_to_cache: (path) -> Path.join(@options.cache, @path_to_req(path))
 	req_to_cache:  (path) -> Path.join(@options.cache, path)

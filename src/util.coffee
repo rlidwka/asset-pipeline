@@ -18,13 +18,27 @@ make_directories = (dest, cb) ->
 	)
 
 exports.write_file = (dest, data, cb) ->
-	fs.writeFile(dest, data, (err) ->
-		if err?.code == 'ENOENT'
-			make_directories(dest, ->
-				fs.writeFile(dest, data, cb)
-			)
-		else
-			cb(err)
+	fs.unlink(dest, ->
+		fs.writeFile(dest, data, (err) ->
+			if err?.code == 'ENOENT'
+				make_directories(dest, ->
+					fs.writeFile(dest, data, cb)
+				)
+			else
+				cb(err)
+		)
+	)
+
+exports.link_file = (src, dst, cb) ->
+	fs.unlink(dst, ->
+		fs.link(src, dst, (err) ->
+			if err?.code == 'ENOENT'
+				make_directories(dst, ->
+					fs.link(src, dst, cb)
+				)
+			else
+				cb(err)
+		)
 	)
 
 exports.do_log = (arg) ->
