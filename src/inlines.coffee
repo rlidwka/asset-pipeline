@@ -172,9 +172,8 @@ module.exports.prepare = (gopts) ->
 			base = base.substr(0,3) if base.length >= 5
 			ext = Path.extname(file)
 			result = Path.join(Path.dirname(file), "#{base}-#{digest}#{ext}")
-			util.link_file(gopts.pipeline.req_to_cache(file), gopts.pipeline.req_to_cache(result), (err, res) ->
+			gopts.pipeline.register(file, result, (err) ->
 				return callback.set([err]) if err
-				gopts.pipeline.register(file, result)
 				callback.set([null, result])
 			)
 		)

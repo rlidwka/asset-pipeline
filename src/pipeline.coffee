@@ -18,17 +18,20 @@ class Pipeline
 		@options.assets = Path.normalize(@options.assets)
 		@options.cache ?= './cache'
 		@options.cache = Path.normalize(@options.cache)
+		@tempDir = Path.join(@options.cache, 'tmp')
+		@staticDir = Path.join(@options.cache, 'static')
+		try fs.mkdirSync(@tempDir)
+		try fs.mkdirSync(@staticDir)
 		if @options.debug?
 			util.do_log(@options.debug)
 		@options.extensions ?= ['.js', '.css']
 		@options.extensions =
 			@options.extensions.map (x) -> if x[0]=='.' then x else '.'+x
-		@builddir = @options.cache # just an alias
 		@depmgr = new DepMgr(@options.assets)
 		@depmgr.min_check_time = @options.min_check_time ? 1000
 		@servers =
-			normal: Connect.static(@options.cache)
-			caching: Connect.static(@options.cache, { maxAge: 365*24*60*60 })
+			normal: Connect.static(@staticDir)
+			caching: Connect.static(@staticDir, { maxAge: 365*24*60*60 })
 		for file in (@options.files ? [])
 			@files[Path.join('/',file)] = { serve: true }
 
@@ -62,13 +65,21 @@ class Pipeline
 			# file is static with md5, never changes
 			server(req, res, safeNext)
 		else
+			file_defined = @files[file]?
+			@files[file] ?= {}
+			@files[file].serve = yes
 			@compile_file(file, (err) =>
 				if err
+					delete @files[file] unless file_defined
 					if err?.code == 'asset-pipeline/filenotfound'
 						return next() # just pass to next
 					else
 						return next(err)
-				server(req, res, safeNext)
+				console.log('publishing', file, @files[file])
+				@publish_file(file, (err) =>
+					return next(err) if err
+					server(req, res, safeNext)
+				)
 			)
 
 	check_if_changed: (file, cb) ->
@@ -97,17 +108,37 @@ class Pipeline
 				args.unshift(null)
 				async.parallel(old_queue.map((f)->f.bind.apply(f, args)))
 
+			finish = (err) =>
+				unless err
+					@files[file] ?= {}
+					@files[file].compiled = true
+				run_callbacks(err)
+
 			MakePath.find(@options.assets, file, (err, found) =>
 				if err
 					@depmgr.resolves_to(file, null)
 					return run_callbacks(err)
 				@depmgr.resolves_to(file, found.path)
 				@send_to_pipeline(file, found.path, found.extlist, (err) =>
-					@files[file] ?= {}
-					@files[file].compiled = true unless(err)
-					run_callbacks(err)
+					return run_callbacks(err) if err
+					if @files[file]?.serve
+						util.link_file(@req_to_cache(file), @req_to_static(file), (err) =>
+							@files[file].published = yes unless err
+							finish(err)
+						)
+					else
+						finish(err)
 				)
 			)
+
+	publish_file: (file, cb) ->
+		if @files[file]? && @files[file].serve && !@files[file].published
+			util.link_file(@req_to_cache(file), @req_to_static(file), (err) =>
+				@files[file].published = yes
+				cb()
+			)
+		else
+			cb()
 
 	actual_pipeline: (data, pipes, filename, attrs, cb) ->
 		return cb(null, data) if pipes.length == 0
@@ -129,7 +160,7 @@ class Pipeline
 		)
 
 	send_to_pipeline: (reqfile, file, plugins, cb) ->
-		dest = Path.join(@options.cache, reqfile)
+		dest = Path.join(@tempDir, reqfile)
 		@depmgr.clear_deps(@path_to_req(file))
 		fs.readFile(file, (err, data) =>
 			return cb(err) if (err)
@@ -140,14 +171,20 @@ class Pipeline
 		)
 
 	register: (orig_name, static_name, cb) ->
-		@files[static_name] =
-			cache: yes
-			serve: yes
-			compiled: yes
+		util.link_file(@req_to_cache(orig_name), @req_to_static(static_name), (err, res) =>
+			return cb(err) if err
+			@files[static_name] =
+				cache: yes
+				serve: yes
+				compiled: yes
+				published: yes
+			cb()
+		)
 
 	path_to_req:   (path) -> Path.join('/', Path.relative(@options.assets, path))
-	path_to_cache: (path) -> Path.join(@options.cache, @path_to_req(path))
-	req_to_cache:  (path) -> Path.join(@options.cache, path)
+	path_to_cache: (path) -> Path.join(@tempDir, @path_to_req(path))
+	req_to_cache:  (path) -> Path.join(@tempDir, path)
+	req_to_static: (path) -> Path.join(@staticDir, path)
 
 module.exports = Pipeline
 
