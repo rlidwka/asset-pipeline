@@ -30,6 +30,12 @@ asyncTest "testing markdown", ->
 		start()
 	)
 
+asyncTest "testing jade", ->
+	$.get("/jade.html", (res) ->
+		equal(res, '<div class="test"><p></p></div>')
+		start()
+	)
+
 asyncTest "testing less subdirs", ->
 	$.get("/a_less/b/subdirtest_less.css", (res) ->
 		equal(res, '''
