@@ -4,10 +4,11 @@ fs      = require 'fs'
 express = require 'express'
 path    = require 'path'
 
-app = express.createServer()
+app = (express.createServer ? express)()
 app.listen(1337, 'localhost')
 app.use(express.bodyParser())
 app.use require('../index.js')(
+	server: app
 	extensions: ['.js', '.css', '.html']
 	debug: true
 )

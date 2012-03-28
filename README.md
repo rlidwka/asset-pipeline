@@ -15,6 +15,8 @@ app.listen(80);
 
 // configuring assets pipeline (full definition of config options see below)
 app.use(require('asset-pipeline')({
+	// reference to a server (used in views rendering)
+	server: app,
 	// directory with your stylesheets or client-side scripts
 	assets: './assets',
 	// directory for cache

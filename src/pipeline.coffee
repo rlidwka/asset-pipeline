@@ -35,6 +35,15 @@ class Pipeline
 		for file in (@options.files ? [])
 			@files[Path.join('/',file)] = { serve: true }
 
+		if @options.server? and @options.server.engine?
+			engine = (file, options, cb) ->
+				console.log(file)
+				cb()
+			for plugin of @plugins
+				@options.server.engine plugin, engine
+		else if @options.server?
+			process.emit('error', new Error("You are using old version of Express. I would recommend to upgrade it to express 3. You could use 2nd, but some features like view rendering will not work in this library (assets-pipeline)."))
+
 	can_serve_file: (file) ->
 		if @files[file]?.serve
 			return true
