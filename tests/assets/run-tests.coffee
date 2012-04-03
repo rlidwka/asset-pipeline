@@ -5,11 +5,11 @@ sleep = (sec = 1) ->
 
 asyncTest "getting .js.coffee.jsx", ->
 	$.get("/test3ext.js", (res) ->
-		equal(res, '''
+		equal(res.replace(/function test\(\)/, 'function()'), '''
 (function() {
   var test;
 
-  test = function test() {
+  test = function() {
     return console.log(2);
   };
 

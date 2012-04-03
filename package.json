@@ -4,10 +4,19 @@
   "version": "0.0.1-pre",
   "author": "Alex Kocharin <alex@kocharin.ru>",
   "dependencies": {
-  },
-  "optionalDependencies": {
+    "connect": ">= 2.0.0",
+    "async": "*"
   },
   "devDependencies": {
+    "express": "git://github.com/visionmedia/express.git",
+   	"coffee-script": "*",
+   	"haml": "*",
+   	"jade": "*",
+    "ejs": "*",
+    "node-markdown": "*",
+    "less": "*",
+    "stylus": "*",
+    "eco": "*"
   },
   "keywords": [],
   "repository": "git@github.com:rlidwka/asset-pipeline.git",
