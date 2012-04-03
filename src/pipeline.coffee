@@ -18,6 +18,7 @@ class Pipeline
 		@options.assets = Path.normalize(@options.assets)
 		@options.cache ?= './cache'
 		@options.cache = Path.normalize(@options.cache)
+		@options.cwd ?= @options.assets
 		@tempDir = Path.join(@options.cache, 'tmp')
 		@staticDir = Path.join(@options.cache, 'static')
 		try fs.mkdirSync(@tempDir)
@@ -36,11 +37,16 @@ class Pipeline
 			@files[Path.join('/',file)] = { serve: true }
 
 		if @options.server? and @options.server.engine?
-			engine = (file, options, cb) ->
-				console.log(file)
-				cb()
-			for plugin of @plugins
-				@options.server.engine plugin, engine
+			@options.server.engine('pipeline', @render_view.bind(@))
+			@options.server.set('view engine', 'pipeline')
+			oldrender = @options.server.render
+			if oldrender?
+				@options.server.render = (view, options, fn) =>
+					if 'function' == typeof options
+						fn = options
+						options = {}
+					options.view_name = view
+					oldrender.call(@options.server, '/', options, fn)
 		else if @options.server?
 			process.emit('error', new Error("You are using old version of Express. I would recommend to upgrade it to express 3. You could use 2nd, but some features like view rendering will not work in this library (assets-pipeline)."))
 
@@ -51,7 +57,10 @@ class Pipeline
 			return true
 		return false
 
-	middleware: -> (req, res, next) =>
+	middleware: -> (req, res, _next) =>
+		next = ->
+			_next.apply(null, arguments)
+
 		url = URL.parse(req.url)
 		path = decodeURIComponent(url.pathname)
 		file = Path.join('/', path)
@@ -77,7 +86,7 @@ class Pipeline
 			file_defined = @files[file]?
 			@files[file] ?= {}
 			@files[file].serve = yes
-			@compile_file(file, (err) =>
+			@compile_file(file, {}, (err) =>
 				if err
 					delete @files[file] unless file_defined
 					if err?.code == 'asset-pipeline/filenotfound'
@@ -91,6 +100,22 @@ class Pipeline
 				)
 			)
 
+	render_view: (_, options, cb) ->
+		file = Path.join('/', options.view_name)
+		func = (retry) =>
+			@files[file] ?= {}
+			@compile_file(file, options, (err) =>
+				if err
+					if retry
+						@files[file].compiled = false
+						func(0)
+					else
+						cb(err)
+				else
+					fs.readFile(@req_to_cache(file), cb)
+			)
+		func(1)
+
 	check_if_changed: (file, cb) ->
 		if !@files[file]?.compiled
 			cb()
@@ -101,7 +126,7 @@ class Pipeline
 				cb()
 			)
 
-	compile_file: (file, cb) ->
+	compile_file: (file, options, cb) ->
 		@check_if_changed file, (err) =>
 			return cb(err) if (err)
 			return cb() if @files[file]?.compiled
@@ -115,7 +140,7 @@ class Pipeline
 				old_queue = @compile_queue[file]
 				delete @compile_queue[file]
 				args.unshift(null)
-				async.parallel(old_queue.map((f)->f.bind.apply(f, args)))
+				old_queue.map (f) -> f.apply(f, args)
 
 			finish = (err) =>
 				unless err
@@ -123,12 +148,12 @@ class Pipeline
 					@files[file].compiled = true
 				run_callbacks(err)
 
-			MakePath.find(@options.assets, file, (err, found) =>
+			MakePath.find(@options.cwd, file, (err, found) =>
 				if err
 					@depmgr.resolves_to(file, null)
 					return run_callbacks(err)
 				@depmgr.resolves_to(file, found.path)
-				@send_to_pipeline(file, found.path, found.extlist, (err) =>
+				@send_to_pipeline(file, options, found.path, found.extlist, (err) =>
 					return run_callbacks(err) if err
 					if @files[file]?.serve
 						util.link_file(@req_to_cache(file), @req_to_static(file), (err) =>
@@ -168,12 +193,12 @@ class Pipeline
 			@actual_pipeline(result, pipes, pipe.file, attrs, cb)
 		)
 
-	send_to_pipeline: (reqfile, file, plugins, cb) ->
+	send_to_pipeline: (reqfile, options, file, plugins, cb) ->
 		dest = Path.join(@tempDir, reqfile)
 		@depmgr.clear_deps(@path_to_req(file))
 		fs.readFile(file, (err, data) =>
 			return cb(err) if (err)
-			@actual_pipeline(data, plugins, file, {pipeline:@}, (err, data) =>
+			@actual_pipeline(data, plugins, file, {pipeline:@, render:options}, (err, data) =>
 				return cb(err) if (err)
 				util.write_file(dest, data, cb)
 			)

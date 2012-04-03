@@ -4,7 +4,7 @@ fs    = require 'fs'
 
 found_css_dep = (orig, ext, path) ->
 	(cb) =>
-		@pipeline.compile_file(path, (err, res) =>
+		@pipeline.compile_file(path, {}, (err, res) =>
 			return cb(err) if err
 			@pipeline.depmgr.depends_on(@pipeline.path_to_req(orig), path)
 			filename = @pipeline.path_to_req(path)

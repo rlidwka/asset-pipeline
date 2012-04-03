@@ -81,7 +81,7 @@ module.exports.prepare = (gopts) ->
 
 	get_file = (file, cb) ->
 		file = Path.resolve(Path.dirname(filename), file)
-		gopts.pipeline.compile_file(file, (err) ->
+		gopts.pipeline.compile_file(file, {}, (err) ->
 			return cb(err) if err
 			fs.readFile(gopts.pipeline.req_to_cache(file), (err) ->
 				gopts.pipeline.depmgr.depends_on(filename, file) unless err
@@ -123,7 +123,7 @@ module.exports.prepare = (gopts) ->
 
 	Inlines.asset_depend_on = Wrap (file) ->
 		callback = new Callback()
-		gopts.pipeline.compile_file(file, (err) ->
+		gopts.pipeline.compile_file(file, {}, (err) ->
 			gopts.pipeline.depmgr.depends_on(filename, file) unless err
 			callback.set(arguments)
 		)
@@ -139,17 +139,6 @@ module.exports.prepare = (gopts) ->
 		)
 		return callback.func()
 
-	Inlines.asset_md5 = Wrap (file, options = {}) ->
-		callback = new Callback()
-		file = Path.resolve(Path.dirname(filename), file)
-		get_file(file, (err, res) ->
-			return callback.set(arguments) if err
-			md5 = crypto.createHash('md5')
-			md5.update(res)
-			callback.set([null, md5.digest('hex')])
-		)
-		return callback.func()
-
 	Inlines.asset_size = Wrap (file, options = {}) ->
 		(cb) -> cb('not supported yet')
 
@@ -157,9 +146,6 @@ module.exports.prepare = (gopts) ->
 		(cb) -> cb('not supported yet')
 
 	Inlines.asset_ctime = Wrap (file, options = {}) ->
-		(cb) -> cb('not supported yet')
-
-	Inlines.asset_atime = Wrap (file, options = {}) ->
 		(cb) -> cb('not supported yet')
 
 	Inlines.asset_uri = Wrap (file, options = {}) ->
