@@ -1,0 +1,18 @@
+{
+  "name": "asset-pipeline",
+  "description": "Coffeescript and stylesheets builder for Node.js",
+  "version": "0.0.1-pre",
+  "author": "Alex Kocharin <alex@kocharin.ru>",
+  "dependencies": {
+  },
+  "optionalDependencies": {
+  },
+  "devDependencies": {
+  },
+  "keywords": [],
+  "repository": "git@github.com:rlidwka/asset-pipeline.git",
+  "main": "index",
+  "bin": { },
+  "engines": { "node":">= 0.4.0" }
+}
+
