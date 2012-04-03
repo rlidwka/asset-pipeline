@@ -24,3 +24,7 @@ app.post('/set', (req, res) ->
 	)
 )
 
+app.get(/\/view\/(.*)/, (req, res) ->
+	res.render(req.params[0])
+)
+
