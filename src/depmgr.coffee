@@ -18,7 +18,9 @@ logcheck = (fn) ->
 class DepsManager
 	constructor: (@base) ->
 		@resolving = {}
-		@deplist = {}
+		@deplist = {
+			'/': {}
+		}
 		# path -> last modified
 		@files = {}
 		@fs_stat_queue = {}

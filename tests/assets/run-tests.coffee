@@ -233,7 +233,7 @@ var x = '/inlines/hel-89eZzvC2.js';
 		start()
 	)
 
-asyncTest "asset_uri 2 versions", ->
+asyncTest "inlines asset_uri 2 versions", ->
 	ver1 = null
 	ver2 = null
 	async.series [
@@ -313,4 +313,48 @@ asyncTest "asset_uri 2 versions", ->
 		equal(res[7], var1)
 		equal(res[8], var2)
 		equal(res[9], var2)
+
+asyncTest "views - asset_uri", ->
+	$.get("/view/asset_uri.ejs", (res) ->
+		equal(res, """
+var x = '/bin-2cHDwoWS';
+var x = '/test-qR2M8qt2.css';
+var x = '/tes-kWHwZtAf.coffee';
+var x = '/inlines/hel-89eZzvC2.js';
+
+""")
+		start()
+	)
+
+asyncTest "views asset_uri 2 versions", ->
+	ver1 = null
+	ver2 = null
+	async.series [
+		(cb) ->
+			$.post("/set", {file:'asset_uri.coffee', body:"x = 123\n"}, (res) ->
+				cb()
+			)
+		,
+		(cb) ->
+			$.get("/view/asset_ch.ejs", (res) ->
+				ver1 = res
+				cb(null, res)
+			)
+		,
+		sleep(),
+		(cb) ->
+			$.post("/set", {file:'asset_uri.coffee', body:"x = 456\n"}, (res) ->
+				cb()
+			)
+		,
+		(cb) ->
+			$.get("/view/asset_ch.ejs", (res) ->
+				ver2 = res
+				cb(null, res)
+			)
+		,
+	], (err, res) ->
+		start()
+		equal(res[1], "var x = '/var/ass-QTvRUBdR.js';\n")
+		equal(res[4], "var x = '/var/ass-m5xcsjyk.js';\n")
 

@@ -6,6 +6,7 @@ async    = require 'async'
 DepMgr   = require './depmgr'
 MakePath = require './makepath'
 util     = require './util'
+Inlines  = require './inlines'
 
 class Pipeline
 	constructor: (@options, @plugins) ->
@@ -34,15 +35,7 @@ class Pipeline
 			caching: Connect.static(@staticDir, { maxAge: 365*24*60*60 })
 		for file in (@options.files ? [])
 			@files[Path.join('/',file)] = { serve: true }
-
-		if @options.server? and @options.server.engine?
-#			engine = (file, options, cb) ->
-#				console.log(file)
-#				cb()
-#			for plugin of @plugins
-#				@options.server.engine plugin, engine
-		else if @options.server?
-			process.emit('error', new Error("You are using old version of Express. I would recommend to upgrade it to express 3. You could use 2nd, but some features like view rendering will not work in this library (assets-pipeline)."))
+		@inlines = Inlines.prepare(filename: '/', pipeline: @)
 
 	can_serve_file: (file) ->
 		if @files[file]?.serve
@@ -51,7 +44,26 @@ class Pipeline
 			return true
 		return false
 
-	middleware: -> (req, res, next) =>
+	middleware: -> (req, res, realNext) =>
+		next = () =>
+			oldrender = res.render
+			if oldrender?
+				res.render = (view, options, fn) =>
+					options ?= {}
+					if 'function' == typeof options
+						fn = options
+						options = {}
+					options[name] ?= value for name,value of @inlines
+					oldrender.call(res, view, options, (err, code) =>
+						return req.next(err) if err
+						Inlines.call(code, (err, newcode) =>
+							return req.next(err) if err
+							return fn(null, newcode) if fn
+							res.send(newcode)
+						)
+					)
+			realNext()
+
 		url = URL.parse(req.url)
 		path = decodeURIComponent(url.pathname)
 		file = Path.join('/', path)
