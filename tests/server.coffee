@@ -4,7 +4,7 @@ fs      = require 'fs'
 express = require 'express'
 path    = require 'path'
 
-app = (express.createServer ? express)()
+app = express()
 app.listen(1337, 'localhost')
 app.use(express.bodyParser())
 app.use require('../index.js')(
@@ -12,6 +12,7 @@ app.use require('../index.js')(
 	extensions: ['.js', '.css', '.html']
 	debug: true
 )
+app.set('views', __dirname + '/views')
 
 console.log("it's started! go to http://localhost:1337/ now")
 

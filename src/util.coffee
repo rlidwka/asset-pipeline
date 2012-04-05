@@ -1,7 +1,7 @@
 Path = require 'path'
 fs   = require 'fs'
 util = require 'util'
-_do_log = false
+_do_log = process.env.NODE_DEBUG && /asset\-pipeline/.test(process.env.NODE_DEBUG)
 
 exports = module.exports = {}
 
