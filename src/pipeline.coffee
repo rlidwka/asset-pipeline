@@ -96,7 +96,7 @@ class Pipeline
 						return next() # just pass to next
 					else
 						return next(err)
-				console.log('publishing', file, @files[file])
+				util.log('publishing', file, @files[file])
 				@publish_file(file, (err) =>
 					return next(err) if err
 					server(req, res, safeNext)
@@ -116,7 +116,7 @@ class Pipeline
 	compile_file: (file, cb) ->
 		@check_if_changed file, (err) =>
 			return cb(err) if (err)
-			return cb() if @files[file]?.compiled
+			return cb(null, false) if @files[file]?.compiled
 
 			util.log "compiling #{file}"
 			if @compile_queue[file]?
@@ -133,7 +133,7 @@ class Pipeline
 				unless err
 					@files[file] ?= {}
 					@files[file].compiled = true
-				run_callbacks(err)
+				run_callbacks(err, true)
 
 			MakePath.find(@options.assets, file, (err, found) =>
 				if err

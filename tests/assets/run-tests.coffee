@@ -212,9 +212,7 @@ var y = "this is some unsafe string \\\\\\n\\\\\\\\ \\\\\\\\\\n\\" \\"\\" \\'\\'
 asyncTest "inlines - hashes", ->
 	$.get("/inlines/hashes.js", (res) ->
 		equal(res, """
-var x = 'd9c1c3c28592a3856bc07452cc44acd3';
 var x = '2cHDwoWS';
-var x = 'a91d8cf2ab765ab1cda04a5b3d4a009b';
 var x = 'qR2M8qt2';
 
 """)
@@ -331,7 +329,7 @@ asyncTest "views asset_uri 2 versions", ->
 	ver2 = null
 	async.series [
 		(cb) ->
-			$.post("/set", {file:'asset_uri.coffee', body:"x = 123\n"}, (res) ->
+			$.post("/set", {file:'asset_uri_d.coffee', body:"x = 123\n"}, (res) ->
 				cb()
 			)
 		,
@@ -343,7 +341,7 @@ asyncTest "views asset_uri 2 versions", ->
 		,
 		sleep(),
 		(cb) ->
-			$.post("/set", {file:'asset_uri.coffee', body:"x = 456\n"}, (res) ->
+			$.post("/set", {file:'asset_uri_d.coffee', body:"x = 456\n"}, (res) ->
 				cb()
 			)
 		,

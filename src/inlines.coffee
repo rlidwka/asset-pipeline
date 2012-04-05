@@ -67,34 +67,45 @@ module.exports.call = (code, maincb) ->
 		maincb(err, code)
 	)
 
-get_digest = (file) ->
-	md5 = crypto.createHash('md5')
-	res = md5.update(file).digest('base64')
-	res = res.replace(/[^A-Za-z0-9]/g, '').substr(0, 8)
-	return res
-
 # options.once
 # options.jsformat
 module.exports.prepare = (gopts) ->
-	filename = gopts.pipeline.path_to_req(gopts.filename)
+	pipeline = gopts.pipeline
+	filename = pipeline.path_to_req(gopts.filename)
 	Inlines = {}
 
 	get_file = (file, cb) ->
 		file = Path.resolve(Path.dirname(filename), file)
-		gopts.pipeline.compile_file(file, (err) ->
+		pipeline.compile_file(file, (err) ->
 			return cb(err) if err
-			fs.readFile(gopts.pipeline.req_to_cache(file), (err) ->
-				gopts.pipeline.depmgr.depends_on(filename, file) unless err
+			fs.readFile(pipeline.req_to_cache(file), (err) ->
+				pipeline.depmgr.depends_on(filename, file) unless err
 				cb.apply(null, arguments)
 			)
 		)
 
 	compile_file = (file, cb) ->
 		file = Path.resolve(Path.dirname(filename), file)
-		gopts.pipeline.compile_file(file, (err) ->
+		pipeline.compile_file(file, (err, rec) ->
 			return cb(err) if err
-			gopts.pipeline.depmgr.depends_on(filename, file)
-			cb(err, gopts.pipeline.req_to_cache(file))
+			pipeline.depmgr.depends_on(filename, file)
+			cb(err, pipeline.req_to_cache(file), rec)
+		)
+
+	get_digest = (file, cb) ->
+		pipeline._digest_cache ?= {}
+		compile_file(file, (err, _, wasrecompiled) ->
+			return cb(err) if err
+			if !wasrecompiled and pipeline._digest_cache[file]?
+				return cb(null, pipeline._digest_cache[file])
+			fs.readFile(pipeline.req_to_cache(file), (err, data) ->
+				return cb(err) if err
+				md5 = crypto.createHash('md5')
+				res = md5.update(data).digest('base64')
+				res = res.replace(/[^A-Za-z0-9]/g, '').substr(0, 8)
+				pipeline._digest_cache[file] = res
+				cb(null, res)
+			)
 		)
 	
 	Inlines.asset_include = Wrap (file, options = {}) ->
@@ -131,8 +142,8 @@ module.exports.prepare = (gopts) ->
 
 	Inlines.asset_depend_on = Wrap (file) ->
 		callback = new Callback()
-		gopts.pipeline.compile_file(file, (err) ->
-			gopts.pipeline.depmgr.depends_on(filename, file) unless err
+		pipeline.compile_file(file, (err) ->
+			pipeline.depmgr.depends_on(filename, file) unless err
 			callback.set(arguments)
 		)
 		return callback.func()
@@ -140,9 +151,8 @@ module.exports.prepare = (gopts) ->
 	Inlines.asset_digest = Wrap (file, options = {}) ->
 		callback = new Callback()
 		file = Path.resolve(Path.dirname(filename), file)
-		get_file(file, (err, res) ->
+		get_digest(file, (err, digest) ->
 			return callback.set(arguments) if err
-			digest = get_digest(res)
 			callback.set([null, digest])
 		)
 		return callback.func()
@@ -162,14 +172,13 @@ module.exports.prepare = (gopts) ->
 	Inlines.asset_uri = Wrap (file, options = {}) ->
 		callback = new Callback()
 		file = Path.resolve(Path.dirname(filename), file)
-		get_file(file, (err, res) ->
+		get_digest(file, (err, digest) ->
 			return callback.set(arguments) if err
-			digest = get_digest(res)
 			base = (Path.basename(file).match(/^[0-9A-Za-z]{1,5}/) ? [''])[0]
 			base = base.substr(0,3) if base.length >= 5
 			ext = Path.extname(file)
 			result = Path.join(Path.dirname(file), "#{base}-#{digest}#{ext}")
-			gopts.pipeline.register(file, result, (err) ->
+			pipeline.register(file, result, (err) ->
 				return callback.set([err]) if err
 				callback.set([null, result])
 			)

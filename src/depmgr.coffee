@@ -97,6 +97,8 @@ class DepsManager
 			return cb(null, !!(1 for i in res when !!i).length)
 		)
 
+	mtime: (file) -> @files[file]?.mtime
+
 	check: (file, cb) ->
 		async.parallel [
 			@_checkFile.bind(@, file),
