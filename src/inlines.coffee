@@ -166,9 +166,6 @@ module.exports.prepare = (gopts) ->
 	Inlines.asset_ctime = Wrap (file, options = {}) ->
 		(cb) -> cb('not supported yet')
 
-	Inlines.asset_atime = Wrap (file, options = {}) ->
-		(cb) -> cb('not supported yet')
-
 	Inlines.asset_uri = Wrap (file, options = {}) ->
 		callback = new Callback()
 		file = Path.resolve(Path.dirname(filename), file)
