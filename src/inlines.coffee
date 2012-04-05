@@ -88,6 +88,14 @@ module.exports.prepare = (gopts) ->
 				cb.apply(null, arguments)
 			)
 		)
+
+	compile_file = (file, cb) ->
+		file = Path.resolve(Path.dirname(filename), file)
+		gopts.pipeline.compile_file(file, (err) ->
+			return cb(err) if err
+			gopts.pipeline.depmgr.depends_on(filename, file)
+			cb(err, gopts.pipeline.req_to_cache(file))
+		)
 	
 	Inlines.asset_include = Wrap (file, options = {}) ->
 		callback = new Callback()
@@ -136,17 +144,6 @@ module.exports.prepare = (gopts) ->
 			return callback.set(arguments) if err
 			digest = get_digest(res)
 			callback.set([null, digest])
-		)
-		return callback.func()
-
-	Inlines.asset_md5 = Wrap (file, options = {}) ->
-		callback = new Callback()
-		file = Path.resolve(Path.dirname(filename), file)
-		get_file(file, (err, res) ->
-			return callback.set(arguments) if err
-			md5 = crypto.createHash('md5')
-			md5.update(res)
-			callback.set([null, md5.digest('hex')])
 		)
 		return callback.func()
 
