@@ -96,7 +96,7 @@ class Pipeline
 						return next() # just pass to next
 					else
 						return next(err)
-				util.log('publishing', file, @files[file])
+				util.log("publishing #{file}")
 				@publish_file(file, (err) =>
 					return next(err) if err
 					server(req, res, safeNext)
