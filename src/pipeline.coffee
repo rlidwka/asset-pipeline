@@ -13,7 +13,7 @@ class Pipeline
 		# we are serving these files to the client
 		@files = {}
 		# queue = {file: [callbacks array]}
-		@compile_queue = {}
+		@id = Math.random()
 
 		@options.assets ?= './assets'
 		@options.assets = Path.normalize(@options.assets)
@@ -95,6 +95,7 @@ class Pipeline
 					if err?.code == 'asset-pipeline/filenotfound'
 						return next() # just pass to next
 					else
+						util.log('ERROR: '+err)
 						return next(err)
 				util.log("publishing #{file}")
 				@publish_file(file, (err) =>
@@ -113,42 +114,34 @@ class Pipeline
 				cb()
 			)
 
-	compile_file: (file, cb) ->
+	compile_file: (file, mcb) ->
 		@check_if_changed file, (err) =>
-			return cb(err) if (err)
-			return cb(null, false) if @files[file]?.compiled
+			return mcb(err) if (err)
+			return mcb(null, false) if @files[file]?.compiled
 
 			util.log "compiling #{file}"
-			if @compile_queue[file]?
-				@compile_queue[file].push(cb)
-				return
-			@compile_queue[file] = [cb]
-			run_callbacks = (args...) =>
-				old_queue = @compile_queue[file]
-				delete @compile_queue[file]
-				args.unshift(null)
-				async.parallel(old_queue.map((f)->f.bind.apply(f, args)))
+			util.NoConcurrent("compile #{@id} #{file}", mcb, (cb) =>
+				finish = (err) =>
+					unless err
+						@files[file] ?= {}
+						@files[file].compiled = true
+					cb(err, true)
 
-			finish = (err) =>
-				unless err
-					@files[file] ?= {}
-					@files[file].compiled = true
-				run_callbacks(err, true)
-
-			MakePath.find(@options.assets, file, (err, found) =>
-				if err
-					@depmgr.resolves_to(file, null)
-					return run_callbacks(err)
-				@depmgr.resolves_to(file, found.path)
-				@send_to_pipeline(file, found.path, found.extlist, (err) =>
-					return run_callbacks(err) if err
-					if @files[file]?.serve
-						util.link_file(@req_to_cache(file), @req_to_static(file), (err) =>
-							@files[file].published = yes unless err
+				MakePath.find(@options.assets, file, (err, found) =>
+					if err
+						@depmgr.resolves_to(file, null)
+						return run_callbacks(err)
+					@depmgr.resolves_to(file, found.path)
+					@send_to_pipeline(file, found.path, found.extlist, (err) =>
+						return run_callbacks(err) if err
+						if @files[file]?.serve
+							util.link_file(@req_to_cache(file), @req_to_static(file), (err) =>
+								@files[file].published = yes unless err
+								finish(err)
+							)
+						else
 							finish(err)
-						)
-					else
-						finish(err)
+					)
 				)
 			)
 
