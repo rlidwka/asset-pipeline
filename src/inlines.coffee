@@ -58,7 +58,7 @@ module.exports.call = (code, maincb) ->
 		return null unless m? and monads[m[1]]?
 		(cb) ->
 			monads[m[1]]._setReplace(m[2]).unWrap((err, res) ->
-				code = code.replace(m[0], res)
+				code = code.replace(m[0], res.replace(/\$/g, '$$$$'))
 				cb(err)
 			)
 	).filter((fn) -> fn)

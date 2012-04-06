@@ -356,16 +356,16 @@ asyncTest "views asset_uri 2 versions", ->
 		equal(res[1], "var x = '/var/ass-QTvRUBdR.js';\n")
 		equal(res[4], "var x = '/var/ass-m5xcsjyk.js';\n")
 
-asyncTest "multiple refs", ->
+asyncTest "multiple refs + replace bug", ->
 	$.get("/multi/multi.html", (res) ->
 		equal(res, """
 zzzzzzzzzzzzzzzz
-/multi/test-uh8lEfww.html
-123
+/multi/test-WglnY2P0.html
+123 $&amp; 123 $1 $2 $0
 
-123
+123 $&amp; 123 $1 $2 $0
 
-/multi/test-uh8lEfww.html
+/multi/test-WglnY2P0.html
 
 """)
 		start()
