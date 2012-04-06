@@ -44,9 +44,7 @@ exports.NoConcurrent = NoConcurrent = (key, cb, func) ->
 
 exports.link_file = (src, dst, maincb) ->
 	NoConcurrent("link #{dst}", maincb, (cb) ->
-		console.log("unlinking #{dst}")
 		fs.unlink(dst, ->
-			console.log("linking #{src} #{dst}")
 			fs.link(src, dst, (err) ->
 				if err?.code == 'ENOENT'
 					make_directories(dst, ->
