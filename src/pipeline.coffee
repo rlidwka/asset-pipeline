@@ -130,10 +130,10 @@ class Pipeline
 				MakePath.find(@options.assets, file, (err, found) =>
 					if err
 						@depmgr.resolves_to(file, null)
-						return run_callbacks(err)
+						return cb(err)
 					@depmgr.resolves_to(file, found.path)
 					@send_to_pipeline(file, found.path, found.extlist, (err) =>
-						return run_callbacks(err) if err
+						return cb(err) if err
 						if @files[file]?.serve
 							util.link_file(@req_to_cache(file), @req_to_static(file), (err) =>
 								@files[file].published = yes unless err
