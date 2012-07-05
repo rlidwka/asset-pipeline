@@ -31,9 +31,7 @@ scan_code = (code, ext, filename, cb) ->
 				unless path.match(/^\.\.\//)
 					funcs.push(found_css_dep.call(@, filename, ext, path))
 	async.parallel(funcs, (err, res) =>
-		if err?.code == 'asset-pipeline/filenotfound'
-			cb(new Error("css dependency #{filename} not found"))
-		else if err
+		if err
 			cb(err)
 		else
 			if funcs.length > 0
