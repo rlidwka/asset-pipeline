@@ -32,7 +32,7 @@ scan_code = (code, ext, filename, cb) ->
 					funcs.push(found_css_dep.call(@, filename, ext, path))
 	async.parallel(funcs, (err, res) =>
 		if err?.code == 'asset-pipeline/filenotfound'
-			cb(new Error("dep not found"))
+			cb(new Error("css dependency #{filename} not found"))
 		else if err
 			cb(err)
 		else
