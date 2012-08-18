@@ -9,6 +9,7 @@ async  = require 'async'
 Path   = require 'path'
 crypto = require 'crypto'
 util   = require './util'
+Cache  = require 'async-cache'
 
 escape_chars = ['\\', '&', '\'', '"', '<', '>']
 
@@ -64,7 +65,7 @@ module.exports.call = (code, maincb) ->
 			)
 	).filter((fn) -> fn)
 
-	async.parallel(fns, (err) ->
+	async.series(fns, (err) ->
 		maincb(err, code)
 	)
 
@@ -94,19 +95,24 @@ module.exports.prepare = (gopts) ->
 		)
 
 	get_digest = (file, cb) ->
-		pipeline._digest_cache ?= {}
+		pipeline._digest_cache ?= new Cache(
+			max: 10000,
+			maxAge: 2*60*60*1000,
+			load: (file, cb) ->
+				fs.readFile(pipeline.req_to_cache(file), (err, data) ->
+					return cb(err) if err
+					md5 = crypto.createHash('md5')
+					res = md5.update(data).digest('base64')
+					res = res.replace(/[^A-Za-z0-9]/g, '').substr(0, 8)
+					pipeline._digest_cache[file] = res
+					cb(null, res)
+				)
+		)
 		compile_file(file, (err, _, wasrecompiled) ->
 			return cb(err) if err
-			if !wasrecompiled and pipeline._digest_cache[file]?
-				return cb(null, pipeline._digest_cache[file])
-			fs.readFile(pipeline.req_to_cache(file), (err, data) ->
-				return cb(err) if err
-				md5 = crypto.createHash('md5')
-				res = md5.update(data).digest('base64')
-				res = res.replace(/[^A-Za-z0-9]/g, '').substr(0, 8)
-				pipeline._digest_cache[file] = res
-				cb(null, res)
-			)
+			if wasrecompiled
+				pipeline._digest_cache.del(file)
+			pipeline._digest_cache.get(file, cb)
 		)
 	
 	Inlines.asset_include = Wrap (file, options = {}) ->

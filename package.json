@@ -5,7 +5,8 @@
   "author": "Alex Kocharin <alex@kocharin.ru>",
   "dependencies": {
     "connect": ">= 2.0.0",
-    "async": "*"
+    "async": "*",
+    "async-cache": "*"
   },
   "devDependencies": {
     "express": "git://github.com/visionmedia/express.git",

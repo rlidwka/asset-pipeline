@@ -119,11 +119,12 @@ class Pipeline
 			return mcb(err) if (err)
 			return mcb(null, false) if @files[file]?.compiled
 
-			util.log "compiling #{file}"
 			util.NoConcurrent("compile #{@id} #{file}", mcb, (cb) =>
+				util.log "compiling #{file}"
 				finish = (err) =>
 					unless err
 						@files[file] ?= {}
+						util.log "compiled successfully: #{file}"
 						@files[file].compiled = true
 					cb(err, true)
 
