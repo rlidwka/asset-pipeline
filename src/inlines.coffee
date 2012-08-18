@@ -11,17 +11,34 @@ crypto = require 'crypto'
 util   = require './util'
 Cache  = require 'async-cache'
 
+# generate random string
+gen_code = (length) ->
+	code = ''
+	chars = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
+	for i in [0...length]
+		code += chars[Math.floor(Math.random()*chars.length)]
+	return code
+
+# it should be guaranteed that this will never be in user data
+START_SEQ = gen_code(12)
+END_SEQ = gen_code(4)
+
+# incremental number of a function
+FuncID = 0
+
 escape_chars = ['\\', '&', '\'', '"', '<', '>']
 
 monads = {}
 Monad = (@fn) ->
-	@id = Math.round(Math.random()*1e16)
+	@id = FuncID++
+	if (FuncID > 1e15) then FuncID = 0
 	monads[@id] = @
 	return @
 
-Monad::toString = -> "[Monad #{@id},#{escape_chars.join(',')}]"
+Monad::toString = -> "#{START_SEQ}#{@id},#{escape_chars.join(',')}#{END_SEQ}"
 Monad::unWrap = (cb) ->
 	@fn (err, res) =>
+		delete monads[@id]
 		return cb(err) if err
 		cb(null, @_doReplace(res))
 
@@ -52,22 +69,29 @@ Callback::func = ->
 
 Wrap = (fn) -> -> new Monad(fn.apply(@, arguments))
 
-module.exports.call = (code, maincb) ->
-	fns = code.match(/\[Monad [^\]]+\]/g) || []
-	fns = fns.map((fn) ->
-		m = fn.match(/\[Monad (\d{2,16}),([^\]]+)\]/)
-		return null unless m? and monads[m[1]]?
-		(cb) ->
-			monads[m[1]]._setReplace(m[2]).unWrap((err, res) ->
-				return cb(err) if err
-				code = code.replace(m[0], res.replace(/\$/g, '$$$$'))
-				cb(err)
-			)
-	).filter((fn) -> fn)
+# it is just very optimized replace of a number of these sequences:
+# START_SEQ + id + ',' + replace + END_SEQ
+inlines_call = (orig, result, pos, cb) ->
+	newpos = orig.indexOf(START_SEQ, pos)
+	if newpos == -1 then return cb(null, result + orig.substr(pos))
+	result += orig.substr(pos, newpos-pos)
 
-	async.series(fns, (err) ->
-		maincb(err, code)
+	pos = newpos + START_SEQ.length
+	newpos = orig.indexOf(',', pos)
+	id = orig.substr(pos, newpos-pos)
+
+	pos = newpos+1
+	newpos = orig.indexOf(END_SEQ, newpos)
+	replace = orig.substr(pos, newpos-pos)
+
+	monads[id]._setReplace(replace).unWrap((err, res) ->
+		return cb(err) if err
+		process.nextTick ->
+			inlines_call(orig, result + res, newpos+END_SEQ.length, cb)
 	)
+
+module.exports.call = (code, cb) ->
+	inlines_call(code, '', 0, cb)
 
 # options.once
 # options.jsformat
@@ -114,7 +138,7 @@ module.exports.prepare = (gopts) ->
 				pipeline._digest_cache.del(file)
 			pipeline._digest_cache.get(file, cb)
 		)
-	
+
 	Inlines.asset_include = Wrap (file, options = {}) ->
 		callback = new Callback()
 		file = Path.resolve(Path.dirname(filename), file)
