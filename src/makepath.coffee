@@ -19,8 +19,8 @@ module.exports.calc = calc = (from, to, oldpath = [], seen = {}) ->
 	newfrom = Path.basename(from, ext)
 	min = Infinity
 	minpath = null
-	for newext in mappings[ext]
-		newpath = oldpath.slice(0).concat({ext, file: newfrom+newext})
+	for newext of mappings[ext]
+		newpath = oldpath.slice(0).concat({ext, file: newfrom+newext, dst: newext})
 		res = calc(newfrom+newext, to, newpath, seen)
 		if res? and res.length < min
 			min = res.length

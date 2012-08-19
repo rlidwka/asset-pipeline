@@ -10,9 +10,9 @@
   },
   "devDependencies": {
     "express": "git://github.com/visionmedia/express.git",
-   	"coffee-script": "*",
-   	"haml": "*",
-   	"jade": "*",
+    "coffee-script": "*",
+    "haml": "*",
+    "jade": "*",
     "ejs": "*",
     "node-markdown": "*",
     "less": "*",

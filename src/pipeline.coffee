@@ -161,7 +161,7 @@ class Pipeline
 		pipe = pipes.shift()
 		if pipe.ext == ''
 			return @actual_pipeline(data, pipes, pipe.file, attrs, cb)
-		unless @plugins[pipe.ext].compile
+		unless @plugins[pipe.ext][pipe.dst].compile
 			return cb(new Error('compiler not found'))
 		attrs.filename = pipe.file
 		oldfile = @path_to_req(filename)
@@ -169,7 +169,7 @@ class Pipeline
 		@depmgr.clear_deps(newfile)
 		@depmgr.depends_on(newfile, oldfile)
 		attrs.filename = pipe.file
-		@plugins[pipe.ext].compile(data, attrs, (err, result) =>
+		@plugins[pipe.ext][pipe.dst].compile(data, attrs, (err, result) =>
 			return cb(err) if err
 			@actual_pipeline(result, pipes, pipe.file, attrs, cb)
 		)

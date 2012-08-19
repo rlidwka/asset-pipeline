@@ -4,10 +4,10 @@ Pipeline = require './pipeline'
 MakePath = require './makepath'
 
 # plugins = {name: {... , require: (lazy require function here)} }
-plugins = {}
+mappings = {}
 
 module.exports = asset_pipeline_factory = (config = {}) ->
-	pipeline = new Pipeline(config, plugins)
+	pipeline = new Pipeline(config, mappings)
 	return pipeline.middleware()
 
 load_plugins = ->
@@ -23,11 +23,10 @@ load_plugins = ->
 				plugin.target = [plugin.target] if typeof(plugin.target) == 'string'
 				if plugin.source
 					for ext in plugin.source
-						plugins['.'+ext] = plugin
-						mappings['.'+ext] = ['']
+						mappings['.'+ext] ?= {'' : plugin}
 						if plugin.target?
 							for te in plugin.target
-								mappings['.'+ext].push('.'+te.replace(/^\./g, ''))
+								mappings['.'+ext]['.'+te.replace(/^\./g, '')] = plugin
 		catch err
 	MakePath.setmappings(mappings)
 
