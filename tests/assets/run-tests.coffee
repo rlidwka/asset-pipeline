@@ -30,9 +30,39 @@ asyncTest "testing markdown", ->
 		start()
 	)
 
-asyncTest "testing jade", ->
+asyncTest "testing jade renderer", ->
 	$.get("/jade.html", (res) ->
-		equal(res, '<div class="test"><p></p></div>')
+		equal(res, '<div class=\"test\"><p>baz</p></div>')
+		start()
+	)
+
+asyncTest "testing jade compiler", ->
+	$.get("/jade.js", (res) ->
+		equal(res, '''
+function anonymous(locals, attrs, escape, rethrow) {
+var attrs = jade.attrs, escape = jade.escape, rethrow = jade.rethrow;
+var buf = [];
+with (locals || {}) {
+var interp;
+buf.push('<div');
+buf.push(attrs({ \"class\": ('test') }, {}));
+buf.push('>');
+if ( typeof(foo) != 'undefined')
+{
+buf.push('<p>');
+var __val__ = foo
+buf.push(escape(null == __val__ ? \"\" : __val__));
+buf.push('</p>');
+}
+else
+{
+buf.push('<p>baz</p>');
+}
+buf.push('</div>');
+}
+return buf.join(\"\");
+}
+''')
 		start()
 	)
 
