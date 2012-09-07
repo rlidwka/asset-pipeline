@@ -53,7 +53,8 @@ class Pipeline
 					if 'function' == typeof options
 						fn = options
 						options = {}
-					options[name] ?= value for name,value of @inlines
+					res.locals(@inlines)
+					#options[name] ?= value for name,value of @inlines
 					oldrender.call(res, view, options, (err, code) =>
 						return req.next(err) if err
 						Inlines.call(code, (err, newcode) =>
