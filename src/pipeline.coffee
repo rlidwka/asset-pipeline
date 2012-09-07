@@ -32,7 +32,7 @@ class Pipeline
 		@depmgr.min_check_time = @options.min_check_time ? 1000
 		@servers =
 			normal: Connect.static(@staticDir)
-			caching: Connect.static(@staticDir, { maxAge: 365*24*60*60 })
+			caching: Connect.static(@staticDir, { maxAge: 365*24*60*60*1000 })
 		for file in (@options.files ? [])
 			@files[Path.join('/',file)] = { serve: true }
 		@inlines = Inlines.prepare(filename: '/', pipeline: @)
