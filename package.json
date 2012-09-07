@@ -6,7 +6,8 @@
   "dependencies": {
     "connect": ">= 2.0.0",
     "async": "*",
-    "async-cache": "*"
+    "async-cache": "*",
+    "fs-ext": "*"
   },
   "devDependencies": {
     "express": ">= 3",

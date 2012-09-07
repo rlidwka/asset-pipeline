@@ -26,6 +26,18 @@ class DepsManager
 		@fs_stat_queue = {}
 		@min_check_time = 1000
 
+	set_state: (obj) ->
+		@resolving = obj.resolving
+		@deplist = obj.deplist
+		@files = obj.files
+
+	get_state: ->
+		obj = {}
+		obj.resolving = @resolving
+		obj.deplist = @deplist
+		obj.files = @files
+		return obj
+
 	clear_deps: (file) ->
 		@deplist[file] = {}
 	

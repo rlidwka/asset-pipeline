@@ -3,6 +3,7 @@ Connect  = require 'connect'
 URL      = require 'url'
 fs       = require 'fs'
 async    = require 'async'
+crypto   = require 'crypto'
 DepMgr   = require './depmgr'
 MakePath = require './makepath'
 util     = require './util'
@@ -12,6 +13,7 @@ class Pipeline
 	constructor: (@options, @plugins) ->
 		# we are serving these files to the client
 		@files = {}
+
 		# queue = {file: [callbacks array]}
 		@id = Math.random()
 
@@ -36,6 +38,7 @@ class Pipeline
 		for file in (@options.files ? [])
 			@files[Path.join('/',file)] = { serve: true }
 		@inlines = Inlines.prepare(filename: '/', pipeline: @)
+		@load_cache_state()
 
 	can_serve_file: (file) ->
 		if @files[file]?.serve
@@ -43,6 +46,39 @@ class Pipeline
 		for ext in @options.extensions when Path.extname(file) == ext
 			return true
 		return false
+
+	load_cache_state: ->
+		# change it if contents format is updated
+		@options.__json_version = 1
+
+		hash = crypto.createHash('md5')
+		hash.update(JSON.stringify(@options))
+		name = hash.digest('base64').replace(/[^A-Za-z0-9]/g, '').substr(0, 12)
+		@state_filename = Path.join(@tempDir, name + '.json')
+		fs.readFile(@state_filename, (err, res) =>
+			return if err
+			try
+				object = JSON.parse(res)
+				@files = object.files
+				@depmgr.set_state(object.depmgr)
+				util.log('state loaded successfully from ' + @state_filename)
+		)
+
+	save_cache_state: (cb) ->
+		# pause at least 20 sec between writes 
+		return if Number(new Date()) < @_state_last_written + 20000
+		@_state_last_written = Number(new Date())
+
+		# defer 2 sec before writing because application is probably
+		# quite busy at the time this function called
+		setTimeout(=>
+			@_state_last_written = Number(new Date())
+			util.log('saving state to ' + @state_filename)
+			fs.writeFile(@state_filename, JSON.stringify({
+				files: @files
+				depmgr: @depmgr.get_state()
+			}), cb)
+		, 2000)
 
 	middleware: -> (req, res, realNext) =>
 		next = () =>
@@ -127,6 +163,7 @@ class Pipeline
 						@files[file] ?= {}
 						util.log "compiled successfully: #{file}"
 						@files[file].compiled = true
+						@save_cache_state()
 					cb(err, true)
 
 				MakePath.find(@options.assets, file, (err, found) =>
