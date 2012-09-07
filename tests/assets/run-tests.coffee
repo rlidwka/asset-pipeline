@@ -39,19 +39,17 @@ asyncTest "testing jade renderer", ->
 asyncTest "testing jade compiler", ->
 	$.get("/jade.js", (res) ->
 		equal(res, '''
-function anonymous(locals, attrs, escape, rethrow) {
-var attrs = jade.attrs, escape = jade.escape, rethrow = jade.rethrow;
+function anonymous(locals, attrs, escape, rethrow, merge) {
+attrs = attrs || jade.attrs; escape = escape || jade.escape; rethrow = rethrow || jade.rethrow; merge = merge || jade.merge;
 var buf = [];
 with (locals || {}) {
 var interp;
-buf.push('<div');
-buf.push(attrs({ \"class\": ('test') }, {}));
-buf.push('>');
+buf.push('<div class="test">');
 if ( typeof(foo) != 'undefined')
 {
 buf.push('<p>');
 var __val__ = foo
-buf.push(escape(null == __val__ ? \"\" : __val__));
+buf.push(escape(null == __val__ ? "" : __val__));
 buf.push('</p>');
 }
 else
@@ -60,7 +58,7 @@ buf.push('<p>baz</p>');
 }
 buf.push('</div>');
 }
-return buf.join(\"\");
+return buf.join("");
 }
 ''')
 		start()
@@ -346,6 +344,8 @@ asyncTest "views - asset_uri", ->
 	$.get("/view/asset_uri.ejs", (res) ->
 		equal(res, """
 var x = '/bin-2cHDwoWS';
+var x = '/bin-2cHDwoWS';
+
 var x = '/test-qR2M8qt2.css';
 var x = '/tes-kWHwZtAf.coffee';
 var x = '/inlines/hel-89eZzvC2.js';

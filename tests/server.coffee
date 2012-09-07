@@ -20,8 +20,10 @@ app.get '/', (req, res) -> res.redirect('/tests.html')
 
 app.post('/set', (req, res) ->
 	file = path.join('./assets/var/', req.body.file)
-	fs.writeFile(file, req.body.body, ->
-		res.send('ok')
+	fs.mkdir('./assets/var/', ->
+		fs.writeFile(file, req.body.body, ->
+			res.send('ok')
+		)
 	)
 )
 
