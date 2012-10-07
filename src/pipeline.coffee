@@ -202,12 +202,16 @@ class Pipeline
 		Compiler = @plugins[pipe.ext]?[pipe.dst]?.compile
 		unless Compiler
 			return cb(new Error('compiler not found'))
-		attrs.filename = pipe.file
 		oldfile = @path_to_req(filename)
 		newfile = @path_to_req(pipe.file)
 		@depmgr.clear_deps(newfile)
 		@depmgr.depends_on(newfile, oldfile)
 		attrs.filename = pipe.file
+
+		# plugin-dependent configs
+		if @options.plugin_config?
+			attrs.plugin_config = @options.plugin_config[pipe.ext]
+
 		Compiler(data, attrs, (err, result) =>
 			return cb(err) if err
 			@actual_pipeline(result, pipes, pipe.file, attrs, cb)

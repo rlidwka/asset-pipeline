@@ -11,6 +11,9 @@ app.use require('../index.js')(
 	server: app
 	extensions: ['.js', '.css', '.html']
 	debug: true
+	plugin_config:
+		'.jade':
+			self: true
 )
 app.set('views', __dirname + '/views')
 
