@@ -153,6 +153,7 @@ If your compiler does not support including other files, your plugin will be nic
 
 - css and js minification
 - line mapping support
+- replace connect with send module
 - documentation
 
 # Philosophy
