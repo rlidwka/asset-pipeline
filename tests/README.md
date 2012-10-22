@@ -27,16 +27,16 @@ User requests for /tests.html
        |  `- compiling /tests/run-all.coffee to /tests/run-all.js
        |     `- compiling /tests/run-all.coffee.ejs to /tests/run-all.coffee
        |        `.
-		 |         |- including /tests/01/run.js
-		 |         |  `- compiling /tests/01/run.coffee to /tests/01/run.js
+       |         |- including /tests/01/run.js
+       |         |  `- compiling /tests/01/run.coffee to /tests/01/run.js
        |         |
-		 |         |- including /tests/02/run.js
-		 |         |  `- compiling /tests/02/run.coffee to /tests/02/run.js
+       |         |- including /tests/02/run.js
+       |         |  `- compiling /tests/02/run.coffee to /tests/02/run.js
        |         |
-		 |         |- including /tests/03/run.js
-		 |         |  `- compiling /tests/03/run.coffee to /tests/03/run.js
+       |         |- including /tests/03/run.js
+       |         |  `- compiling /tests/03/run.coffee to /tests/03/run.js
        |         `.
-		 |           `- ..... and so on ...
+       |           `- ..... and so on ...
        |
        `- resolving URL for /css/qunit-git.css
           `- compiling /css/qunit-git.css
