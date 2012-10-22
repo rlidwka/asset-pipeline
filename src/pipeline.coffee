@@ -173,13 +173,9 @@ class Pipeline
 					@depmgr.resolves_to(file, found.path)
 					@send_to_pipeline(file, found.path, found.extlist, (err) =>
 						return cb(err) if err
-						if @files[file]?.serve
-							util.link_file(@req_to_cache(file), @req_to_static(file), (err) =>
-								@files[file].published = yes unless err
-								finish(err)
-							)
-						else
-							finish(err)
+						# republish it
+						delete @files[file]?.published
+						@publish_file(file, finish)
 					)
 				)
 			)
@@ -187,8 +183,8 @@ class Pipeline
 	publish_file: (file, cb) ->
 		if @files[file]? && @files[file].serve && !@files[file].published
 			util.link_file(@req_to_cache(file), @req_to_static(file), (err) =>
-				@files[file].published = yes
-				cb()
+				@files[file].published = yes unless err
+				cb(err)
 			)
 		else
 			cb()
