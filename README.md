@@ -20,6 +20,10 @@ It means that you have a whole bunch of different files in your project, and thi
 
 Module builds a file when user requests it first time, and then tracks all its dependencies to see if anything is changed. So first request is usually slow, but other requests should be as fast as requests to static files.
 
+# Usage examples
+
+See tests application, I hope it can give some ideas how it can be used.
+
 # Syntax (for Express framework):
 
 ```javascript

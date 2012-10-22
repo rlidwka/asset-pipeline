@@ -1,5 +1,6 @@
 # You can compile this using:
 # $ node -e 'require("coffee-script");delete require.extensions[".json"];console.log(JSON.stringify(require("./package")));' > package.json
+
 module.exports = {
 	# generic info
 	name: 'asset-pipeline'
