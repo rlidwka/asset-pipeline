@@ -1,0 +1,16 @@
+/* ex: set tabstop=4 expandtab: */
+/* This file will be compiled from `index.haml.ejs` to `index.haml`, then to `index.html` and sent to user after that */
+%html
+    %head
+        %script(src="<%- asset_uri('/js/jquery-1.7.1.min.js') %>")
+        %script(src="<%- asset_uri('/js/qunit-git.js') %>")
+        %script(src="<%- asset_uri('/js/async.min.js') %>")
+        %script(src="<%- asset_uri('/tests/run-all.js') %>")
+        %link(rel="stylesheet" href="<%- asset_uri('/css/qunit-git.css') %>")
+    %body
+        %h1(id="qunit-header")="Powered by QUnit"
+        %h2(id="qunit-banner")
+        %div(id="qunit-testrunner-toolbar")
+        %h2(id="qunit-userAgent")
+        %ol(id="qunit-tests")
+        %div(id="qunit-fixture")="test markup, will be hidden"

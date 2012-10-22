@@ -15,7 +15,7 @@ app.use require('../index.js')(
 		'.jade':
 			self: true
 )
-app.set('views', __dirname + '/views')
+app.set('views', __dirname + '/assets/tests')
 
 console.log("it's started! go to http://localhost:1337/ now")
 
