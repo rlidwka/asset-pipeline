@@ -1,5 +1,5 @@
 Path     = require 'path'
-Connect  = require 'connect'
+Send     = require 'send'
 URL      = require 'url'
 fs       = require 'fs'
 async    = require 'async'
@@ -32,14 +32,26 @@ class Pipeline
 			@options.extensions.map (x) -> if x[0]=='.' then x else '.'+x
 		@depmgr = new DepMgr(@options.assets)
 		@depmgr.min_check_time = @options.min_check_time ? 1000
+
+		# setup servers
+		server = (set_maxage = false) => (req, res, next) =>
+			sender = Send(req, URL.parse(req.url).pathname)
+			sender.root(@staticDir)
+			sender.maxage(365*24*60*60*1000) if set_maxage
+			sender.on('directory', () -> next(new Error('directory found')))
+			sender.on('error', (err) -> next(err))
+			sender.pipe(res)
+
 		@servers =
-			normal: Connect.static(@staticDir)
-			caching: Connect.static(@staticDir, { maxAge: 365*24*60*60*1000 })
+			normal: server(false)
+			caching: server(true)
+
 		for file in (@options.files ? [])
 			@files[Path.join('/',file)] = { serve: true }
 		@inlines = Inlines.prepare(filename: '/', pipeline: @)
 		@load_cache_state()
 
+	# check if this file can be served directly
 	can_serve_file: (file) ->
 		if @files[file]?.serve
 			return true
@@ -47,6 +59,7 @@ class Pipeline
 			return true
 		return false
 
+	# loading cache state (usually on startup)
 	load_cache_state: ->
 		# change it if contents format is updated
 		@options.__json_version = 1
@@ -111,17 +124,10 @@ class Pipeline
 		else
 			next()
 
-	serve_file: (req, res, file, server, next, safe=1) ->
-		safeNext = next
-		if safe then safeNext = (err) =>
-			# it's in case someone has deleted our caches
-			return next(err) if (err)
-			@files[file].compiled = false
-			@serve_file(req, res, file, server, next, 0)
-		
+	serve_file: (req, res, file, server, next) ->
 		if @files[file]?.compiled and @files[file].cache
 			# file is static with md5, never changes
-			server(req, res, safeNext)
+			server(req, res, next)
 		else
 			file_defined = @files[file]?
 			@files[file] ?= {}
@@ -137,7 +143,7 @@ class Pipeline
 				util.log("publishing #{file}")
 				@publish_file(file, (err) =>
 					return next(err) if err
-					server(req, res, safeNext)
+					server(req, res, next)
 				)
 			)
 

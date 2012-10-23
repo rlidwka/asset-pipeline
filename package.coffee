@@ -8,7 +8,7 @@ module.exports = {
 	version: '0.2.0'
 	author: 'Alex Kocharin <alex@kocharin.ru>'
 	dependencies: {
-		connect: '>= 2.0.0'
+		send: '>= 0.1.0'
 		async: '*'
 		'async-cache': '*'
 	}
