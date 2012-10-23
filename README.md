@@ -149,12 +149,6 @@ module.exports = {
 
 If your compiler does not support including other files, your plugin will be nice and simple. If it does and you want to track all dependencies, just write an issue and ask for help (because of some really dark magic starting here).
 
-# TODO list
-
-- css and js minification
-- line mapping support
-- documentation
-
 # Philosophy
 
 This library writes output files to a cache and calls connect.static to serve them.
