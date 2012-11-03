@@ -51,6 +51,26 @@ app.use(require('asset-pipeline')({
 - `files` (default: []) - a list of additional files you want to serve (see below)
 - `min_check_time` (default: 1000) - time in milliseconds, module won't check any file for updates faster than specified here (set a small value for development but large on production)
 - `debug` - print to stdout some additional debug info
+- `minify` (default: []) - a list of outputted file extensions to minify. Try `[".js", ".css"]` on production.
+
+## Minify
+
+Minification happens after other filters have run. Acceptable options are ".js" and ".css".
+
+### Javascript
+
+Add these options to config options (above) to control how minification happens.
+
+For more info, see [UglifyJS](https://github.com/mishoo/UglifyJS)
+
+- `jsMangle` (default: false) - mangle javascript names
+- `jsSqueeze` (default: false) - enable javascript compression optimization
+- `jsLift` - merge and move var declarations to the scop of the scope; discard unused function arguments or variables; discard unused (named) inner functions. It also tries to merge assignments following the var declaration into it. This can decrease size of some code, and increase other, YMMV.
+
+### CSS
+
+There are no options for this, CSS will just be minified before output. You can retain comments by beginning your comments with `/*!`
+
 
 # Supported plugins
 
@@ -132,14 +152,14 @@ Your module should export object simular to that (you can look inside existing p
 
 ```javascript
 module.exports = {
-  // file extension (or array of these extensions) of files 
+  // file extension (or array of these extensions) of files
   // that will be processed by your plugin, mandatory
   source: 'coffee',
 
   // file extension (or array of these extensions) of target files, optional
   target: 'js',
 
-  // your compiler, arguments: source code, some options 
+  // your compiler, arguments: source code, some options
   // (options.filename is quite useful) and a callback(err, compiled_code)
   compile: function(code, options, callback) {
     callback(null, require('coffee-script').compile(code));
