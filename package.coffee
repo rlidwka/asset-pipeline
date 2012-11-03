@@ -11,6 +11,8 @@ module.exports = {
 		send: '>= 0.1.0'
 		async: '*'
 		'async-cache': '*'
+		'uglify-js': '*'
+		'clean-css': '*'
 	}
 
 	# all these files needed to run tests

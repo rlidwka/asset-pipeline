@@ -8,6 +8,11 @@ DepMgr   = require './depmgr'
 MakePath = require './makepath'
 util     = require './util'
 Inlines  = require './inlines'
+uglify   = require 'uglify-js'
+cleanCSS = require 'clean-css'
+
+uglify_jsp = uglify.parser
+uglify_pro = uglify.uglify
 
 class Pipeline
 	constructor: (@options, @plugins) ->
@@ -30,6 +35,9 @@ class Pipeline
 		@options.extensions ?= ['.js', '.css']
 		@options.extensions =
 			@options.extensions.map (x) -> if x[0]=='.' then x else '.'+x
+		@options.minify ?= []
+		@options.minify =
+			@options.minify.map (x) -> if x[0]=='.' then x else '.'+x
 		@depmgr = new DepMgr(@options.assets)
 		@depmgr.min_check_time = @options.min_check_time ? 1000
 
@@ -78,7 +86,7 @@ class Pipeline
 		)
 
 	save_cache_state: (cb) ->
-		# pause at least 20 sec between writes 
+		# pause at least 20 sec between writes
 		return if Number(new Date()) < @_state_last_written + 20000
 		@_state_last_written = Number(new Date())
 
@@ -226,6 +234,22 @@ class Pipeline
 			return cb(err) if (err)
 			@actual_pipeline(data, plugins, file, {pipeline:@}, (err, data) =>
 				return cb(err) if (err)
+
+				ext = "." + dest.split(".").pop()
+				if @options.minify.indexOf(ext) isnt -1
+				  if ext is ".js"
+				    ast = uglify_jsp.parse(data)
+				    if _this.options.jsMangle is true
+				      ast = uglify_pro.ast_mangle(ast)
+				    if _this.options.jsSqueeze is true
+				      ast = uglify_pro.ast_squeeze(ast)
+				    if _this.options.jsLift is true
+				      ast = uglify_pro.ast_lift_variables(ast)
+				    data = uglify_pro.gen_code(ast)
+				  if ext is ".css"
+				  	data = cleanCSS.process(data);
+
+
 				util.write_file(dest, data, cb)
 			)
 		)
