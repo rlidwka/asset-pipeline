@@ -65,7 +65,7 @@ For more info, see [UglifyJS](https://github.com/mishoo/UglifyJS)
 
 - `jsMangle` (default: false) - mangle javascript names
 - `jsSqueeze` (default: false) - enable javascript compression optimization
-- `jsLift` - merge and move var declarations to the scop of the scope; discard unused function arguments or variables; discard unused (named) inner functions. It also tries to merge assignments following the var declaration into it. This can decrease size of some code, and increase other, YMMV.
+- `jsLift` (default: false) - merge and move var declarations to the scop of the scope; discard unused function arguments or variables; discard unused (named) inner functions. It also tries to merge assignments following the var declaration into it. This can decrease size of some code, and increase other, YMMV.
 
 ### CSS
 
