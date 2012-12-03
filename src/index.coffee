@@ -8,7 +8,9 @@ mappings = {}
 
 module.exports = asset_pipeline_factory = (config = {}) ->
 	pipeline = new Pipeline(config, mappings)
-	return pipeline.middleware()
+	result = pipeline.middleware()
+	result.inlines = pipeline.inlines
+	return result
 
 load_plugins = ->
 	# source extension -> target extension
