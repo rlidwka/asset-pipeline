@@ -10,5 +10,4 @@ package.json: package.coffee
 
 coffeescript: src/*
 	coffee -c -o lib src
-	git add lib/* lib/*/*
 
