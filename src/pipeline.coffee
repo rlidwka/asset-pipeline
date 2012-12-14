@@ -103,14 +103,17 @@ class Pipeline
 						fn = options
 						options = {}
 					res.locals(@inlines)
+
+					# default function
+					if 'function' != typeof fn
+						fn = (err, code) ->
+							return req.next(err) if err
+							res.send(code)
+
 					#options[name] ?= value for name,value of @inlines
 					oldrender.call(res, view, options, (err, code) =>
-						return req.next(err) if err
-						Inlines.call(code, (err, newcode) =>
-							return req.next(err) if err
-							return fn(null, newcode) if fn
-							res.send(newcode)
-						)
+						return fn(err) if err
+						Inlines.call(code, fn)
 					)
 			realNext()
 
