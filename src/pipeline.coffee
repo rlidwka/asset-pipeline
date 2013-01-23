@@ -125,7 +125,8 @@ class Pipeline
 			server = if @files[file]?.cache then @servers.caching else @servers.normal
 			@serve_file(req, res, file, server, next)
 		else
-			next()
+			@servers.caching(req, res, next)
+			#next()
 
 	serve_file: (req, res, file, server, next) ->
 		if @files[file]?.compiled and @files[file].cache
