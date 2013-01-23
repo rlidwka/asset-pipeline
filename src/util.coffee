@@ -19,15 +19,21 @@ make_directories = (dest, cb) ->
 	)
 
 exports.write_file = (dest, data, cb) ->
-	fs.unlink(dest, ->
-		fs.writeFile(dest, data, (err) ->
-			if err?.code == 'ENOENT'
-				make_directories(dest, ->
-					fs.writeFile(dest, data, cb)
-				)
-			else
-				cb(err)
+	# atomic replacing with temp file to avoid race conditions
+	safe_write = (cb) ->
+		tmpname = dest + '.tmp'+String(Math.random()).substr(2, 5)
+		fs.writeFile(tmpname, data, (err) ->
+			return cb(err) if err
+			fs.rename(tmpname, dest, cb)
 		)
+
+	safe_write((err) ->
+		if err?.code == 'ENOENT'
+			make_directories(dest, ->
+				safe_write(cb)
+			)
+		else
+			cb(err)
 	)
 
 _NoConcurrentCache = {}
@@ -50,6 +56,9 @@ exports.link_file = (src, dst, maincb) ->
 					make_directories(dst, ->
 						fs.link(src, dst, cb)
 					)
+				# probably another thread linked this file at the same time
+				else if err?.code == 'EEXIST'
+					cb()
 				else
 					cb(err)
 			)
