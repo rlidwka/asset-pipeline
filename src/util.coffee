@@ -49,19 +49,22 @@ exports.NoConcurrent = NoConcurrent = (key, cb, func) ->
 			func.apply(null, arguments)
 
 exports.link_file = (src, dst, maincb) ->
+	# atomic replacing with temp file to avoid race conditions
+	safe_link = (cb) ->
+		tmpname = dst + '.tmp'+String(Math.random()).substr(2, 5)
+		fs.link(src, tmpname, (err) ->
+			return cb(err) if err
+			fs.rename(tmpname, dst, cb)
+		)
+
 	NoConcurrent("link #{dst}", maincb, (cb) ->
-		fs.unlink(dst, ->
-			fs.link(src, dst, (err) ->
-				if err?.code == 'ENOENT'
-					make_directories(dst, ->
-						fs.link(src, dst, cb)
-					)
-				# probably another thread linked this file at the same time
-				else if err?.code == 'EEXIST'
-					cb()
-				else
-					cb(err)
-			)
+		safe_link((err) ->
+			if err?.code == 'ENOENT'
+				make_directories(dst, ->
+					safe_link(cb)
+				)
+			else
+				cb(err)
 		)
 	)
 
