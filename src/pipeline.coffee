@@ -34,7 +34,13 @@ class Pipeline
 		@depmgr.min_check_time = @options.min_check_time ? 1000
 
 		# setup servers
-		server = (set_maxage = false) => (req, res, next) =>
+		server = (set_maxage = false) => (req, res, _next) =>
+			# fix for post and other requests with content data
+			req.pause()
+			next = (err) ->
+				req.resume()
+				_next(err)
+			
 			sender = Send(req, URL.parse(req.url).pathname)
 			sender.root(@staticDir)
 			sender.maxage(365*24*60*60*1000) if set_maxage
