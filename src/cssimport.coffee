@@ -1,5 +1,5 @@
 async = require 'async'
-Path  = require 'path'
+Path  = require './path'
 fs    = require 'fs'
 
 found_css_dep = (orig, ext, path) ->

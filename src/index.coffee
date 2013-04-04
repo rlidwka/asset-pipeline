@@ -1,5 +1,5 @@
 fs       = require 'fs'
-Path     = require 'path'
+Path     = require './path'
 Pipeline = require './pipeline'
 MakePath = require './makepath'
 

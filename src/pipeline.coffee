@@ -1,4 +1,4 @@
-Path     = require 'path'
+Path     = require './path'
 Send     = require 'send'
 URL      = require 'url'
 fs       = require 'fs'

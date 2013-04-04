@@ -1,4 +1,4 @@
-Path = require 'path'
+Path = require './path'
 fs   = require 'fs'
 util = require 'util'
 async = require 'async'
