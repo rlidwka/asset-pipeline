@@ -11,6 +11,10 @@ crypto = require 'crypto'
 util   = require './util'
 Cache  = require 'async-cache'
 
+# damn windows
+resolve = ->
+	Path.resolve(arguments...).replace(/^[A-Z]:\\/, '')
+
 # generate random string
 gen_code = (length) ->
 	code = ''
@@ -101,7 +105,7 @@ module.exports.prepare = (gopts) ->
 	Inlines = {}
 
 	get_file = (file, cb) ->
-		file = Path.resolve(Path.dirname(filename), file)
+		file = resolve(Path.dirname(filename), file)
 		pipeline.compile_file(file, (err) ->
 			return cb(err) if err
 			fs.readFile(pipeline.req_to_cache(file), (err) ->
@@ -111,7 +115,7 @@ module.exports.prepare = (gopts) ->
 		)
 
 	compile_file = (file, cb) ->
-		file = Path.resolve(Path.dirname(filename), file)
+		file = resolve(Path.dirname(filename), file)
 		pipeline.compile_file(file, (err, rec) ->
 			return cb(err) if err
 			pipeline.depmgr.depends_on(filename, file)
@@ -141,7 +145,7 @@ module.exports.prepare = (gopts) ->
 
 	Inlines.asset_include = Wrap (file, options = {}) ->
 		callback = new Callback()
-		file = Path.resolve(Path.dirname(filename), file)
+		file = resolve(Path.dirname(filename), file)
 		get_file(file, (err) ->
 			results = arguments
 			unless err
@@ -181,7 +185,7 @@ module.exports.prepare = (gopts) ->
 
 	Inlines.asset_digest = Wrap (file, options = {}) ->
 		callback = new Callback()
-		file = Path.resolve(Path.dirname(filename), file)
+		file = resolve(Path.dirname(filename), file)
 		get_digest(file, (err, digest) ->
 			return callback.set(arguments) if err
 			callback.set([null, digest])
@@ -199,7 +203,7 @@ module.exports.prepare = (gopts) ->
 
 	Inlines.asset_uri = Wrap (file, options = {}) ->
 		callback = new Callback()
-		file = Path.resolve(Path.dirname(filename), file)
+		file = resolve(Path.dirname(filename), file)
 		get_digest(file, (err, digest) ->
 			return callback.set(arguments) if err
 			base = (Path.basename(file).match(/^[0-9A-Za-z]{1,5}/) ? [''])[0]
