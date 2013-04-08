@@ -51,10 +51,16 @@ exports.NoConcurrent = NoConcurrent = (key, cb, func) ->
 exports.link_file = (src, dst, maincb) ->
 	# atomic replacing with temp file to avoid race conditions
 	safe_link = (cb) ->
-		tmpname = dst + '.tmp'+String(Math.random()).substr(2, 5)
+		tmpname = dst + '.tmp'+String(Math.random()).substr(2, 8)
 		fs.link(src, tmpname, (err) ->
 			return cb(err) if err
-			fs.rename(tmpname, dst, cb)
+			fs.rename(tmpname, dst, (err) ->
+				cb(err)
+
+				# If oldpath and newpath are existing hard links referring to the same file,
+				# then rename() does nothing, and returns a success status.
+				fs.unlink(tmpname, ->)
+			)
 		)
 
 	NoConcurrent("link #{dst}", maincb, (cb) ->
