@@ -5,7 +5,7 @@ module.exports = {
 	# generic info
 	name: 'asset-pipeline'
 	description: 'Runtime assets builder for Express 3'
-	version: '0.2.0'
+	version: '0.3.0'
 	author: 'Alex Kocharin <alex@kocharin.ru>'
 	dependencies: {
 		send: '>= 0.1.0'
