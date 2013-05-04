@@ -134,6 +134,16 @@ class Pipeline
 			@servers.caching(req, res, next)
 			#next()
 
+	get_file: (file, cb) ->
+		relcwd = Path.relative(@options.assets, process.cwd())
+		file = Path.resolve('/'+relcwd, file)
+		@compile_file(file, (err) =>
+			return cb(err) if err
+			fs.readFile(@req_to_cache(file), (err) =>
+				cb.apply(null, arguments)
+			)
+		)
+
 	serve_file: (req, res, file, server, next) ->
 		if @files[file]?.compiled and @files[file].cache
 			# file is static with md5, never changes

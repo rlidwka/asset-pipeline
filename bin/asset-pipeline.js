@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+
+var commander = require('commander');
+var rimraf = require('rimraf');
+var Pipeline = require('../index.js');
+var TempDir = require('temporary/lib/dir');
+var assert = require('assert');
+
+commander
+	.option('-s, --source [dir]', 'source (assets) directory, defaults to "."', '.')
+	.parse(process.argv);
+
+if (commander.args.length != 1) commander.help();
+
+var cache = new TempDir;
+
+// protection against incorrect temporary names...
+// this folder will be rm-rf'ed, so I'd just hate it to be /home
+assert(typeof(cache.path) === 'string');
+assert(cache.path.match(/\d{10}/));
+assert(cache.path.indexOf('..') === -1);
+
+var pipeline = Pipeline({
+	assets: commander.source,
+	cache: cache.path
+});
+
+pipeline.get_file(commander.args[0], function(err, data) {
+	rimraf(cache.path, function() {
+		if (err) {
+			console.log(err);
+		} else {
+			console.log(data.toString('utf8'));
+		}
+		process.exit();
+	});
+});
+

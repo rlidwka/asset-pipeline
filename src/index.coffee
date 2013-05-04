@@ -10,6 +10,7 @@ module.exports = asset_pipeline_factory = (config = {}) ->
 	pipeline = new Pipeline(config, mappings)
 	result = pipeline.middleware()
 	result.inlines = pipeline.inlines
+	result.get_file = -> pipeline.get_file(arguments...)
 	return result
 
 load_plugins = ->

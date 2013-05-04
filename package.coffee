@@ -11,6 +11,12 @@ module.exports = {
 		send: '>= 0.1.0'
 		async: '*'
 		'async-cache': '*'
+		
+		# for command-line interface
+		# waaay to many things for a simple thing :(
+		temporary: '*'
+		commander: '*'
+		rimraf: '*'
 	}
 
 	# all these files needed to run tests
@@ -29,7 +35,9 @@ module.exports = {
 	keywords: 'express assets build coffee jade stylus ejs haml markdown'.split(/\s+/)
 	repository: 'git://github.com/rlidwka/asset-pipeline.git'
 	main: 'index'
-	bin: {}
+	bin: {
+		"asset-pipeline": "./bin/asset-pipeline"
+	}
 
 	# potentially could run on 0.4.x, but I don't want to support it
 	engines: { node: '>= 0.6.0' }
