@@ -7,7 +7,7 @@ var TempDir = require('temporary/lib/dir');
 var assert = require('assert');
 
 commander
-	.option('-s, --source [dir]', 'source (assets) directory, defaults to "."', '.')
+	.option('-s, --source <dir>', 'source (assets) directory, defaults to "."', '.')
 	.parse(process.argv);
 
 if (commander.args.length != 1) commander.help();
