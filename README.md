@@ -24,6 +24,28 @@ Module builds a file when user requests it first time, and then tracks all its d
 
 See tests application, I hope it can give some ideas how it can be used.
 
+# Command-line interface
+
+```bash
+$ echo 'test = -> console.log(<%=1+1%>)' > test.js.coffee.ejs
+
+$ asset-pipeline test.js.coffee.ejs
+test = -> console.log(<%=1+1%>)
+
+$ asset-pipeline test.js.coffee
+test = -> console.log(2)
+
+$ asset-pipeline test.js
+(function() {
+  var test;
+
+  test = function() {
+    return console.log(2);
+  };
+
+}).call(this);
+```
+
 # Syntax (for Express framework):
 
 ```javascript
