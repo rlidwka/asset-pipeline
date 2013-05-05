@@ -8,9 +8,17 @@ var assert = require('assert');
 
 commander
 	.option('-s, --source <dir>', 'source (assets) directory, defaults to "."', '.')
+	.option('-p, --plugins <list>', 'comma-separated list of plugins to load')
 	.parse(process.argv);
 
 if (commander.args.length != 1) commander.help();
+
+if (commander.plugins) {
+	commander.plugins.split(',').forEach(function(file) {
+		var plugin = require(file);
+		Pipeline.register_plugin(plugin);
+	});
+}
 
 var cache = new TempDir;
 
@@ -30,7 +38,7 @@ pipeline.get_file(commander.args[0], function(err, data) {
 		if (err) {
 			console.log(err);
 		} else {
-			console.log(data.toString('utf8'));
+			console.log(data.toString('utf8').replace(/\n$/, ''));
 		}
 		process.exit();
 	});

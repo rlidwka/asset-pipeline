@@ -2,10 +2,7 @@ Path = require './path'
 fs   = require 'fs'
 util = require './util'
 
-mappings = {}
-
-module.exports.setmappings = (map) ->
-	mappings = map
+module.exports.mappings = mappings = {}
 
 module.exports.calc = calc = (from, to, oldpath = [], seen = {}) ->
 	return null if oldpath.length > 10 # infinite loop?

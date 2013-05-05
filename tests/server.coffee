@@ -7,7 +7,15 @@ path    = require 'path'
 app = express()
 app.listen(1337, 'localhost')
 app.use(express.bodyParser())
-app.use require('../index.js')(
+
+pipeline = require('../index.js')
+pipeline.register_plugin {
+	source: 'base64'
+	compile: (code, options, callback) ->
+		callback(null, "file = \"#{options.filename}\"\nbase64 = \"#{new Buffer(code).toString('base64')}\"\n")
+}
+
+app.use pipeline(
 	server: app
 	extensions: ['.js', '.css', '.html']
 	debug: true

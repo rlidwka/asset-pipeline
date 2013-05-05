@@ -10,7 +10,7 @@ util     = require './util'
 Inlines  = require './inlines'
 
 class Pipeline
-	constructor: (@options, @plugins) ->
+	constructor: (@options) ->
 		# we are serving these files to the client
 		@files = {}
 
@@ -221,7 +221,7 @@ class Pipeline
 		pipe = pipes.shift()
 		if pipe.ext == ''
 			return @actual_pipeline(data, pipes, pipe.file, attrs, cb)
-		Compiler = @plugins[pipe.ext]?[pipe.dst]?.compile
+		Compiler = MakePath.mappings[pipe.ext]?[pipe.dst]
 		unless Compiler
 			return cb(new Error('compiler not found'))
 		oldfile = @path_to_req(filename)
