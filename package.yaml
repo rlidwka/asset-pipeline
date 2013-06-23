@@ -1,7 +1,7 @@
 # generic info
 name: 'asset-pipeline'
 description: 'Runtime assets builder for Express 3'
-version: '0.3.0'
+version: 0.3.1
 author: 'Alex Kocharin <alex@kocharin.ru>'
 
 dependencies:
