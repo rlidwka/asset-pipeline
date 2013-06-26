@@ -206,9 +206,9 @@ module.exports.prepare = (gopts) ->
 			base = base.substr(0,3) if base.length >= 5
 			ext = Path.extname(file)
 			result = Path.join(Path.dirname(file), "#{base}-#{digest}#{ext}")
-			pipeline.register(file, result, (err) ->
+			pipeline.register(file, result, (err, final_uri) ->
 				return callback.set([err]) if err
-				callback.set([null, result])
+				callback.set([null, final_uri])
 			)
 		)
 		return callback.func()

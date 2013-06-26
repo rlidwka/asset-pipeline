@@ -21,6 +21,7 @@ class Pipeline
 		@options.assets = Path.normalize(@options.assets)
 		@options.cache ?= './cache'
 		@options.cache = Path.normalize(@options.cache)
+		@options.mount_point ?= ''
 		@tempDir = Path.join(@options.cache, 'tmp')
 		@staticDir = Path.join(@options.cache, 'static')
 		try fs.mkdirSync(@tempDir)
@@ -258,7 +259,7 @@ class Pipeline
 				serve: yes
 				compiled: yes
 				published: yes
-			cb()
+			cb(null, Path.join(@options.mount_point, static_name))
 		)
 
 	path_to_req:   (path) -> Path.join('/', Path.relative(@options.assets, path))
