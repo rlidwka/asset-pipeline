@@ -14,7 +14,7 @@ else
 {
 buf.push(\"<p>baz</p>\");
 }
-buf.push(\"</div>\");return buf.join(\"\");
+buf.push(\"</div>\");;return buf.join(\"\");
 }
 ''')
 		start()

@@ -23,6 +23,16 @@ app.use pipeline(
 		'.jade':
 			self: true
 )
+app.use('/subdir', pipeline(
+	server: app
+	extensions: ['.js', '.css', '.html']
+	mount_point: '/subdir'
+	cache: 'cache/subdir'
+	debug: true
+	plugin_config:
+		'.coffee':
+			bare: true
+))
 app.set('views', __dirname + '/assets/tests')
 
 console.log("it's started! go to http://localhost:1337/ now")
