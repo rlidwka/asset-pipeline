@@ -2,7 +2,7 @@ module.exports =
 	source: 'ejs'
 	compile: (code, options, callback) ->
 		try
-			ejs = require 'ejs'
+			ejs = require('../require')('ejs', options)
 			inlines = require '../inlines'
 			code = code.toString('utf8')
 			code = ejs.render(code, inlines.prepare(options))

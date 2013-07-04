@@ -9,7 +9,7 @@ module.exports =
 			return callback(err) if err
 			options.filename = newfilename if newfilename
 			try
-				stylus = require 'stylus'
+				stylus = require('../require')('stylus', options)
 				inlines = require '../inlines'
 				compiler = stylus(code)
 				for idx,fn of inlines.prepare(options)

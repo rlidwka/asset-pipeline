@@ -232,8 +232,14 @@ class Pipeline
 		attrs.filename = pipe.file
 
 		# plugin-dependent configs
+		# try both ".ext" and "ext"
 		if @options.plugin_config?
-			attrs.plugin_config = @options.plugin_config[pipe.ext]
+			attrs.plugin_config =
+				@options.plugin_config[pipe.ext] ?
+				@options.plugin_config[pipe.ext.replace(/^\./)]
+
+		if @options.dependencies?
+			attrs.dependencies = @options.dependencies
 
 		Compiler(data, attrs, (err, result) =>
 			return cb(err) if err

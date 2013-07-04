@@ -12,7 +12,7 @@ module.exports =
 				for key,val of options.plugin_config
 					plugin_config[key] = val
 
-			jade = require 'jade'
+			jade = require('../require')('jade', options)
 			js = jade.compile(code, plugin_config)
 			callback(null, js)
 		catch err

@@ -4,7 +4,7 @@ util      = require 'util'
 
 css_compiler = (code, options, callback) ->
 	try
-		less = require 'less'
+		less = require('../require')('less', options)
 		parser = new(less.Parser)(
 			paths: [
 				Path.dirname(options.filename)
